@@ -6,22 +6,27 @@
 #include <map>
 #include <string>
 
+#include "ai.h"
+#include "constants.h"
+
 namespace SDLH {
     struct Agent;
     class Base {
         public:
             SDL_Window* window;
             SDL_Renderer* renderer;
-            std::map<std::string, SDL_Texture*>* ts;
             int width, height;
             SDL_Event e; bool quit;
             Base(int width, int height);
-            const std::map<std::string, std::string> loadorder =
-            {{"agent","images/agent.bmp"}};
+            void initBasics();
+            void startLoop();
+            int addAgent(Agent* a);
+            std::vector<Agent*> getAgents();
+        private:
+            std::vector<Agent*> agents;
             bool load();
             void destroy();
             void loop();
-            int addAgent(Agent* a);
     };
 
     struct Agent {
@@ -31,7 +36,10 @@ namespace SDLH {
         int side; // faction
         Uint32 starttick;
         std::pair<double, double> pos;
-        const SDL_Texture* texture;
-        Agent(int x, int y, int dir, int side);
+        SDL_Texture* texture;
+        AIH::Network nn;
+        Agent(int x, int y, double dir, int side, Base* b);
+        void update();
+        void draw(Base* b);
     };
 };
