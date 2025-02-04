@@ -34,12 +34,13 @@ namespace SDLH {
         double dir;
         double speed;
         int side; // faction
+        double angvel; // angular velocity
         Uint32 starttick;
         std::pair<double, double> pos;
         SDL_Texture* texture;
         AIH::Network nn;
         Agent(int x, int y, double dir, int side, Base* b);
-        void update();
+        void update(Base* b);
         void draw(Base* b);
     };
 };

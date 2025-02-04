@@ -1,6 +1,4 @@
 /.DS_Store
-/include
-/lib
 /main
 /sdl.o
 /main.o

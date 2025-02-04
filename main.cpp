@@ -9,6 +9,9 @@ using namespace std;
 int main() {
     SDLH::Base* b = new SDLH::Base(500, 500);
     b->initBasics();
-    b->addAgent(new SDLH::Agent(250, 250, 45.0, 0, b));
+    SDLH::Agent* a = new SDLH::Agent(250, 250, 45.0, 0, b);
+    a->angvel = 0.1;
+    a->speed = 0.5;
+    b->addAgent(a);
     b->startLoop();
 }

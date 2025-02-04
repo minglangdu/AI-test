@@ -64,7 +64,7 @@ void SDLH::Base::loop() {
     SDL_RenderClear(renderer);
     for (Agent* a : agents) {
         // cout << "AAA\n";
-        a->update();
+        a->update(this);
         // cout << "AA\n";
         a->draw(this);
         // cout << "A\n";
@@ -104,6 +104,7 @@ SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Base* b) {
     speed = SPEED;
     dir = dir;
     side = side; // ai faction
+    starttick = SDL_GetTicks();
 }
 
 void SDLH::Agent::draw(SDLH::Base* b) {
@@ -111,8 +112,26 @@ void SDLH::Agent::draw(SDLH::Base* b) {
     SDL_RenderCopyEx(b->renderer, texture, NULL, hitbox, 90 - dir, NULL, SDL_FLIP_NONE);
 }
 
-void SDLH::Agent::update() {
-    // to do
+void SDLH::Agent::update(SDLH::Base* b) {
+    dir += angvel;
+    double delta = max((SDL_GetTicks() - starttick) / 5.0, 0.01);
+    double ny = pos.second - sin(dir * M_PI / 180) * speed * delta;
+    double nx = pos.first + cos(dir * M_PI / 180) * speed * delta;
+    starttick = SDL_GetTicks();
+    if (ny < 0) {
+        ny += b->height;
+    }
+    if (nx < 0) {
+        nx += b->width;
+    }
+    if (nx > b->width) {
+        nx -= b->width;
+    } 
+    if (ny > b->height) {
+        ny -= b->height;
+    }
+    pos.first = nx;
+    pos.second = ny;
     hitbox->x = pos.first;
     hitbox->y = pos.second;
 }
