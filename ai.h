@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include "Eigen/Dense"
 
 #include "constants.h"
 
@@ -16,6 +17,7 @@ namespace AIH {
         double bias;
         public:
             Neuron(int wsize, double bi);
+            Neuron(std::vector<double> we, double bi);
             friend struct Layer;
             friend class Network;
     };
@@ -28,7 +30,7 @@ namespace AIH {
             Layer(Layer* prevl, int nexsize, int size);
             std::vector<std::vector<double>> showVal(); // shows the values of all the neurons in a one-column matrix
             std::vector<std::vector<double>> showWM(); // shows weight matrix as described below
-            std::vector<Neuron*> getVal(); // forward feed
+            std::vector<int> getVal(); // forward feed
             /*
             Use matrix multiplication: 
             Get a matrix w where one row is all the connections of the neurons
@@ -39,9 +41,9 @@ namespace AIH {
             */
     };
     class Network {
-        std::vector<Layer*> layers;
         public:
+            std::vector<Layer*> layers;
             Network();
-            void feedforward();
+            std::vector<int> run();
     };
 }

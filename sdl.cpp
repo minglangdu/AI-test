@@ -21,7 +21,6 @@ void SDLH::Base::initBasics() {
         cout << SDL_GetError() << "\n";
         return;
     }
-    cout << width << " " << height << "\n";
     window = SDL_CreateWindow("AI Test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
     if (!window) {
         cout << "Window couldn't be created.\n";
@@ -104,6 +103,8 @@ SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Base* b) {
     speed = SPEED;
     dir = dir;
     side = side; // ai faction
+    nn = new AIH::Network();
+    vector<int> a = nn->run(); // problem with getVal
     starttick = SDL_GetTicks();
 }
 

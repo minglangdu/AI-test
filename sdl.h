@@ -38,7 +38,7 @@ namespace SDLH {
         Uint32 starttick;
         std::pair<double, double> pos;
         SDL_Texture* texture;
-        AIH::Network nn;
+        AIH::Network* nn;
         Agent(int x, int y, double dir, int side, Base* b);
         void update(Base* b);
         void draw(Base* b);
