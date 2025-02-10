@@ -6,3 +6,8 @@ Meant to be ai factions attacking each other.
 While this feels similar to my boid test thing, this will have many features and only be similar in the `sdl.cpp` code. 
 
 I've decided to remove `include` and `lib` from the gitignore, so that I can download it them better. 
+
+## Credits
+
+- [SDL2](https://www.libsdl.org/)
+- [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page)
