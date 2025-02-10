@@ -104,7 +104,7 @@ SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Base* b) {
     dir = dir;
     side = side; // ai faction
     nn = new AIH::Network();
-    vector<int> a = nn->run(); // problem with getVal
+    vector<double> a = nn->run(); 
     starttick = SDL_GetTicks();
 }
 
@@ -114,6 +114,18 @@ void SDLH::Agent::draw(SDLH::Base* b) {
 }
 
 void SDLH::Agent::update(SDLH::Base* b) {
+    // to give neural network inputs
+    AIH::Layer* inp = nn->layers[0];
+
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    for (int i = 0; i < inp->neurons.size(); i ++) {
+        inp->neurons[i]->value = dist(mt);
+    }
+    vector<double> a = nn->run();
+    angvel = a[1];
+    speed = a[0];
     dir += angvel;
     double delta = max((SDL_GetTicks() - starttick) / 5.0, 0.01);
     double ny = pos.second - sin(dir * M_PI / 180) * speed * delta;

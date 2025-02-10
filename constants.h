@@ -6,4 +6,4 @@
 
 const int SPEED = 5;
 const int AGENT_SIZE = 25;
-const bool DEBUG = false;
+const bool DEBUG = true;

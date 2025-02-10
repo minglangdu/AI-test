@@ -22,15 +22,15 @@ namespace AIH {
             friend class Network;
     };
     struct Layer {
-        std::vector<Neuron*> neurons;
-        Layer* prev;
         public:
+            std::vector<Neuron*> neurons;
+            Layer* prev;
             friend struct Neuron;
             friend class Network;
             Layer(Layer* prevl, int nexsize, int size);
-            std::vector<std::vector<double>> showVal(); // shows the values of all the neurons in a one-column matrix
+            std::vector<double> showVal(); // shows the values of all the neurons in a one-column matrix
             std::vector<std::vector<double>> showWM(); // shows weight matrix as described below
-            std::vector<int> getVal(); // forward feed
+            std::vector<double> getVal(); // forward feed
             /*
             Use matrix multiplication: 
             Get a matrix w where one row is all the connections of the neurons
@@ -44,6 +44,6 @@ namespace AIH {
         public:
             std::vector<Layer*> layers;
             Network();
-            std::vector<int> run();
+            std::vector<double> run();
     };
 }
