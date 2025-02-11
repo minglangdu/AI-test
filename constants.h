@@ -5,5 +5,7 @@
 #include <random>
 
 const int SPEED = 5;
-const int AGENT_SIZE = 25;
-const bool DEBUG = true;
+const int AGENT_SIZE = 15;
+const int AGENT_AMOUNT = 15;
+
+const bool DEBUG = false;
