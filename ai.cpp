@@ -12,7 +12,8 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 double AIH::accs(double wsum) {
-    return wsum / (1 + abs(wsum));
+    double res = wsum / (1 + abs(wsum));
+    return res;
 }
 
 AIH::Neuron::Neuron(int wsize, double bi) {
@@ -30,7 +31,7 @@ AIH::Neuron::Neuron(vector<double> we, double bi) {
 vector<double> AIH::Layer::showVal() {
     // if (DEBUG) cout << "<showVal>\n";
     vector<double> ns;
-    for (Neuron* n : neurons) {
+    for (Neuron* n : prev->neurons) {
         ns.push_back(n->value);
     }
     // if (DEBUG) cout << "\n</showVal>\n";
@@ -40,9 +41,9 @@ vector<double> AIH::Layer::showVal() {
 vector<vector<double>> AIH::Layer::showWM() {
     vector<vector<double>> res;
     // if (DEBUG) cout << "<showWM>\n";
-    for (int i = 0; i < neurons.size(); i ++) {
+    for (int j = 0; j < prev->neurons.size(); j ++) {
         vector<double> r;
-        for (int j = 0; j < prev->neurons.size(); j ++) {
+        for (int i = 0; i < neurons.size(); i ++) {
             // if (DEBUG) {
                 // cout << prev->neurons[j]->weights[i] << " ";
             // }
@@ -83,12 +84,18 @@ vector<double> AIH::Layer::getVal() {
     // uses eigen library to make into eigen-recognized matrix.
     MatrixXd wmm = mconv(wm);
     VectorXd vam = vconv(va);
+    if (DEBUG) {
+        cout << "wmm " << wmm.rows() << " " << wmm.cols() << "\n";
+        // cout << wmm << "\n";
+        cout << "vam " << vam.rows() << " " << vam.cols() << "\n";
+        // for (int i = 0; i < vam.rows(); i ++) {
+        //     cout << vam(i, 0) << " ";
+        // }
+        // cout << vam << "\n";
+        // cout << "\n";
+    }
     MatrixXd res = wmm * vam;
     if (DEBUG) {
-        // cout << "wmm " << wmm.rows() << " " << wmm.cols() << "\n";
-        // cout << wmm << "\n";
-        // cout << "vam " << vam.rows() << " " << vam.cols() << "\n";
-        // cout << vam << "\n";
         // cout << "res " << res.rows() << " " << res.cols() << "\n";
         // cout << res << "\n";
     }
@@ -127,10 +134,19 @@ AIH::Network::Network() {
     layers = res;
 }
 
+void AIH::Layer::clear() {
+    for (Neuron* n : neurons) {
+        n->value = 0;
+    }
+}
+
 vector<double> AIH::Network::run() {
     if (DEBUG) cout << "<run>\n";
     for (int i = 1; i < layers.size(); i ++) {
-        cout << "Layer " << i + 1 << ":\n";
+        layers[i]->clear();
+    }
+    for (int i = 1; i < layers.size(); i ++) {
+        if (DEBUG) cout << "Layer " << i + 1 << ":\n";
         vector<double> vals = layers[i]->getVal();
         for (int j = 0; j < layers[i]->neurons.size(); j ++) {
             layers[i]->neurons[j]->value = vals[j];

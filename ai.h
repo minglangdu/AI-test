@@ -28,6 +28,7 @@ namespace AIH {
             friend struct Neuron;
             friend class Network;
             Layer(Layer* prevl, int nexsize, int size);
+            void clear(); // clears neurons. 
             std::vector<double> showVal(); // shows the values of all the neurons in a one-column matrix
             std::vector<std::vector<double>> showWM(); // shows weight matrix as described below
             std::vector<double> getVal(); // forward feed

@@ -120,9 +120,12 @@ void SDLH::Agent::update(SDLH::Base* b) {
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<double> dist(0.0, 1.0);
+    if (DEBUG) cout << "Input: \n";
     for (int i = 0; i < inp->neurons.size(); i ++) {
         inp->neurons[i]->value = dist(mt);
+        if (DEBUG) cout << inp->neurons[i]->value << " ";
     }
+    if (DEBUG) cout << "\n";
     vector<double> a = nn->run();
     angvel = a[1];
     speed = a[0];
