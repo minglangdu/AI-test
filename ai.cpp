@@ -102,7 +102,7 @@ vector<double> AIH::Layer::getVal() {
     vector<double> vres (res.data(), res.data() + res.rows() * res.cols());
     vector<double> vals (neurons.size(), 0);
     for (int i = 0; i < neurons.size(); i ++) {
-        double cur = accs(vres[i] + neurons[i]->bias);
+        double cur = accs(vres[i] - neurons[i]->bias);
         vals[i] = cur;
         if (DEBUG) cout << cur << " ";
     }
@@ -113,7 +113,7 @@ vector<double> AIH::Layer::getVal() {
 AIH::Layer::Layer(Layer* prevl, int nexsize, int size) {
     std::random_device rd;
     std::mt19937 mt(rd());
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    std::uniform_real_distribution<double> dist(-1.0, 1.0);
     neurons = vector<Neuron*> ();
     for (int i = 0; i < size; i ++) {
         vector<double> gw;

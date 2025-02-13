@@ -100,7 +100,7 @@ SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Base* b) {
         return;
     }
     pos = {x, y};
-    speed = SPEED;
+    speed = 0;
     dir = dir;
     side = side; // ai faction
     nn = new AIH::Network();
@@ -119,7 +119,7 @@ void SDLH::Agent::update(SDLH::Base* b) {
 
     std::random_device rd;
     std::mt19937 mt(rd());
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    std::uniform_real_distribution<double> dist(0.01, 1.0);
     if (DEBUG) cout << "Input: \n";
     for (int i = 0; i < inp->neurons.size(); i ++) {
         inp->neurons[i]->value = dist(mt);
@@ -127,9 +127,14 @@ void SDLH::Agent::update(SDLH::Base* b) {
     }
     if (DEBUG) cout << "\n";
     vector<double> a = nn->run();
-    angvel = a[1];
+    cout << a[1] << "\n";
+    angvel = (360 * a[1] - dir);
     speed = a[0];
+    angvel = max(min(angvel, MAX_ANGVEL), MAX_ANGVEL * -1);
+    speed = max(min(speed, MAX_SPEED), MAX_SPEED * -1);
+    // cout << angvel << "\n";
     dir += angvel;
+    dir -= 360 * floor(dir / 360);
     double delta = max((SDL_GetTicks() - starttick) / 5.0, 0.01);
     double ny = pos.second - sin(dir * M_PI / 180) * speed * delta;
     double nx = pos.first + cos(dir * M_PI / 180) * speed * delta;
