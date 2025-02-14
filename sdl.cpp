@@ -3,17 +3,20 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <tuple>
 
 #include "sdl.h"
 #include "constants.h"
 
 using namespace std;
 
-SDLH::Base::Base(int w, int h) {
+SDLH::Base::Base(int w, int h, string t) {
     width = w;
     height = h;
-    
+    title = t;
 }
+
+SDLH::Display::Display(int w, int h) : Base(w, h, "Main Display") {}
 
 void SDLH::Base::initBasics() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -21,7 +24,7 @@ void SDLH::Base::initBasics() {
         cout << SDL_GetError() << "\n";
         return;
     }
-    window = SDL_CreateWindow("AI Test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
     if (!window) {
         cout << "Window couldn't be created.\n";
         cout << SDL_GetError() << "\n";
@@ -37,6 +40,14 @@ void SDLH::Base::initBasics() {
     SDL_SetRenderDrawColor(renderer, 0x66, 0x66, 0x66, 0xFF);
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
+    SDL_RaiseWindow(window);
+}
+
+void SDLH::Display::createDebug() {
+    if (DEBUG_WIND) {
+        db = new SDLH::Debug(DEBUG_SIZE, DEBUG_SIZE);
+        db->initBasics();
+    }
 }
 
 void SDLH::Base::startLoop() {
@@ -59,6 +70,26 @@ void SDLH::Base::loop() {
     if (quit) return;
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) quit = true;
+        if (e.window.event == SDL_WINDOWEVENT_CLOSE) quit = true;
+    }
+    SDL_RenderClear(renderer);
+    // render everything here
+    SDL_RenderPresent(renderer);
+}
+
+void SDLH::Display::startLoop() {
+    quit = false;
+    while (!quit) {
+        loop();
+    }
+    destroy();
+}
+
+void SDLH::Display::loop() {
+    if (quit) return;
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_QUIT) quit = true;
+        if (e.window.event == SDL_WINDOWEVENT_CLOSE) quit = true;
     }
     SDL_RenderClear(renderer);
     for (Agent* a : agents) {
@@ -68,16 +99,19 @@ void SDLH::Base::loop() {
         a->draw(this);
         // cout << "A\n";
     }
+    if (DEBUG_WIND) {
+        db->showNetwork(agents[0]->nn);
+    }
     // render everything here
     SDL_RenderPresent(renderer);
 }
 
-int SDLH::Base::addAgent(Agent* a) {
+int SDLH::Display::addAgent(Agent* a) {
     agents.push_back(a);
     return agents.size() - 1; // returns index
 }
 
-vector<SDLH::Agent*> SDLH::Base::getAgents() {
+vector<SDLH::Agent*> SDLH::Display::getAgents() {
     return agents;
 }
 
@@ -127,7 +161,7 @@ void SDLH::Agent::update(SDLH::Base* b) {
     }
     if (DEBUG) cout << "\n";
     vector<double> a = nn->run();
-    cout << a[1] << "\n";
+    // cout << a[1] << "\n";
     angvel = (360 * a[1] - dir);
     speed = a[0];
     angvel = max(min(angvel, MAX_ANGVEL), MAX_ANGVEL * -1);
@@ -155,4 +189,27 @@ void SDLH::Agent::update(SDLH::Base* b) {
     pos.second = ny;
     hitbox->x = pos.first;
     hitbox->y = pos.second;
+}
+
+SDLH::Debug::Debug(int w, int h) : SDLH::Base(w, h, "Debug Screen") {}
+
+void SDLH::Debug::showNetwork(AIH::Network* nn) {
+    SDL_RenderClear(renderer);
+    for (int i = 0; i < nn->layers.size(); i ++) {
+        AIH::Layer* l = nn->layers[i];
+        for (int j = 0; j < l->neurons.size(); j ++) {
+            AIH::Neuron* n = l->neurons[j];
+            auto color = redgreen(n->value);
+            SDL_Rect outline = {(j + 1) * NGAP + (j) * NSIZE,
+            (i + 1) * NGAP + (i) * NSIZE + YOFF, 
+            (j + 1) * NGAP + (j + 1) * NSIZE,
+            (i + 1) * NGAP + (i + 1) * NSIZE};
+            SDL_SetRenderDrawColor(renderer, get<0>(color), get<1>(color), get<2>(color), 0xFF);        
+            SDL_RenderDrawRect(renderer, &outline);
+        }
+    }
+}
+
+tuple<int, int, int> SDLH::Debug::redgreen(double val) {
+    return {0xFF, 0x00, 0x00};
 }
