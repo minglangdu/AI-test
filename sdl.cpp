@@ -150,7 +150,6 @@ void SDLH::Agent::draw(SDLH::Base* b) {
 void SDLH::Agent::update(SDLH::Base* b) {
     // to give neural network inputs
     AIH::Layer* inp = nn->layers[0];
-
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<double> dist(0.01, 1.0);
@@ -193,23 +192,42 @@ void SDLH::Agent::update(SDLH::Base* b) {
 
 SDLH::Debug::Debug(int w, int h) : SDLH::Base(w, h, "Debug Screen") {}
 
+void SDLH::Debug::startLoop() {
+    // intentionally left blank
+}
+
 void SDLH::Debug::showNetwork(AIH::Network* nn) {
+    SDL_SetRenderDrawColor(renderer, 0x66, 0x66, 0x66, 0xFF);
     SDL_RenderClear(renderer);
+    int x = XGAP;
+    int y;
     for (int i = 0; i < nn->layers.size(); i ++) {
         AIH::Layer* l = nn->layers[i];
+        int yc = (YGAP + NSIZE) * ceil(l->neurons.size() / 2.0);
+        y = YGAP + YOFF - yc;
         for (int j = 0; j < l->neurons.size(); j ++) {
             AIH::Neuron* n = l->neurons[j];
             auto color = redgreen(n->value);
-            SDL_Rect outline = {(j + 1) * NGAP + (j) * NSIZE,
-            (i + 1) * NGAP + (i) * NSIZE + YOFF, 
-            (j + 1) * NGAP + (j + 1) * NSIZE,
-            (i + 1) * NGAP + (i + 1) * NSIZE};
-            SDL_SetRenderDrawColor(renderer, get<0>(color), get<1>(color), get<2>(color), 0xFF);        
-            SDL_RenderDrawRect(renderer, &outline);
+            SDL_Rect outline = {x, y, NSIZE, NSIZE};
+            SDL_SetRenderDrawColor(renderer, get<0>(color), get<1>(color), get<2>(color), 0xFF);
+            SDL_RenderFillRect(renderer, &outline);
+            for (int k = 0; k < l->neurons[j]->weights.size(); k ++) {
+                auto color = redgreen(l->neurons[j]->weights[k]);
+                SDL_SetRenderDrawColor(renderer, get<0>(color), get<1>(color), get<2>(color), 0xFF);
+                int nyc = (YGAP + NSIZE) * ceil(nn->layers[i + 1]->neurons.size() / 2.0);
+                SDL_RenderDrawLine(renderer, x + NSIZE, y + NSIZE / 2, x + XGAP + NSIZE, 
+                YGAP + YOFF - nyc + (YGAP + NSIZE) * k);
+            }
+            y += YGAP + NSIZE;
         }
+        x += XGAP + NSIZE;
     }
+    SDL_RenderPresent(renderer);
 }
 
 tuple<int, int, int> SDLH::Debug::redgreen(double val) {
-    return {0xFF, 0x00, 0x00};
+    val = max(min(255 * AIH::accs(val), (double)REDGREEN_PAIRS.second), (double)REDGREEN_PAIRS.first) - (double)REDGREEN_PAIRS.first;
+    val /= (double)(REDGREEN_PAIRS.second - REDGREEN_PAIRS.first);
+    val *= 255;
+    return {255 - val, val, 0x00};
 }

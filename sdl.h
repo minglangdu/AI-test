@@ -43,6 +43,7 @@ namespace SDLH {
         public:
             Debug(int width, int height);
             void showNetwork(AIH::Network* nn);
+            void startLoop();
         private:
             std::tuple<int, int, int> redgreen(double val);
     };

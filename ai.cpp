@@ -11,8 +11,8 @@ using namespace std;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-double AIH::accs(double wsum) {
-    double res = wsum / (1 + abs(wsum));
+double AIH::accs(double wsum) { // nvm just uses normal sigmoid now
+    double res = 1 / (1 + pow(M_E, -1 * wsum));
     return res;
 }
 
