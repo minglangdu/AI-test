@@ -226,8 +226,6 @@ void SDLH::Debug::showNetwork(AIH::Network* nn) {
 }
 
 tuple<int, int, int> SDLH::Debug::redgreen(double val) {
-    val = max(min(255 * AIH::accs(val), (double)REDGREEN_PAIRS.second), (double)REDGREEN_PAIRS.first) - (double)REDGREEN_PAIRS.first;
-    val /= (double)(REDGREEN_PAIRS.second - REDGREEN_PAIRS.first);
     val *= 255;
     return {255 - val, val, 0x00};
 }
