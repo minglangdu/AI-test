@@ -7,11 +7,8 @@
 
 using namespace std;
 
-
-
 int main() {
     SDLH::Display* b = new SDLH::Display(WINDOW_SIZE, WINDOW_SIZE);
-    b->createDebug();
     b->initBasics();
     std::random_device rd;
     std::mt19937 mt(rd());
@@ -20,5 +17,6 @@ int main() {
     for (int i = 0; i < AGENT_AMOUNT; i ++) {
         b->addAgent(new SDLH::Agent(dist(mt), dist(mt), dist2(mt), 0, b));
     }
+    b->createDebug();
     b->startLoop();
 }

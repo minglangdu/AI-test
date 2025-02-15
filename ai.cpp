@@ -126,7 +126,6 @@ AIH::Layer::Layer(Layer* prevl, int nexsize, int size) {
 AIH::Network::Network() {
     // random test network
     vector<Layer*> res = {};
-    vector<int> sizes = {10, 16, 16, 2, 0}; // last value just to stop segfault
     for (int i = 0; i < sizes.size() - 1; i ++) {
         Layer* prev = i == 0 ? NULL : res[i - 1];
         res.push_back(new Layer(prev, sizes[i + 1], sizes[i]));
