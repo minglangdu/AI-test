@@ -204,19 +204,28 @@ void SDLH::Debug::showNetwork(AIH::Network* nn) {
     for (int i = 0; i < nn->layers.size(); i ++) {
         AIH::Layer* l = nn->layers[i];
         int yc = (YGAP + NSIZE) * ceil(l->neurons.size() / 2.0);
-        y = YGAP + YOFF - yc;
+        y = YOFF - yc;
         for (int j = 0; j < l->neurons.size(); j ++) {
             AIH::Neuron* n = l->neurons[j];
             auto color = redgreen(n->value);
-            SDL_Rect outline = {x, y, NSIZE, NSIZE};
+            SDL_Rect outline = {x + NSIZE / 5, y + NSIZE / 5, NSIZE * 3/5, NSIZE * 3/5};
             SDL_SetRenderDrawColor(renderer, get<0>(color), get<1>(color), get<2>(color), 0xFF);
             SDL_RenderFillRect(renderer, &outline);
+            color = redgreen(n->bias);
+            SDL_SetRenderDrawColor(renderer, get<0>(color), get<1>(color), get<2>(color), 0xFF);
+            outline = {x, y, NSIZE, NSIZE};
+            SDL_RenderDrawRect(renderer, &outline);
             for (int k = 0; k < l->neurons[j]->weights.size(); k ++) {
-                auto color = redgreen(l->neurons[j]->weights[k]);
+                auto color = redgreen( // gets the difference in the value the edge causes.
+                    nn->layers[i + 1]->neurons[k]->value -
+                    AIH::accs(
+                    log((1 / nn->layers[i + 1]->neurons[k]->value) - 1) // sigmoid in reverse
+                    - n->weights[k] * n->value)
+                    );
                 SDL_SetRenderDrawColor(renderer, get<0>(color), get<1>(color), get<2>(color), 0xFF);
                 int nyc = (YGAP + NSIZE) * ceil(nn->layers[i + 1]->neurons.size() / 2.0);
                 SDL_RenderDrawLine(renderer, x + NSIZE, y + NSIZE / 2, x + XGAP + NSIZE, 
-                YGAP + YOFF - nyc + (YGAP + NSIZE) * k);
+                YOFF - nyc + (YGAP + NSIZE) * k);
             }
             y += YGAP + NSIZE;
         }
