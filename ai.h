@@ -7,31 +7,28 @@
 #include "constants.h"
 
 namespace AIH {
-    // Is an accelerated version of the sigmoid function.
-    double accs(double wsum); 
-    struct Neuron {
-        // the weights on the connections to other neurons
-        std::vector<double> weights; 
-        double value;
-        // subtract this from the weighted sum
-        double bias;
-        public:
-            Neuron(int wsize, double bi);
-            Neuron(std::vector<double> we, double bi);
-            friend struct Layer;
-            friend class Network;
+    struct Neuron { // represents a single neuron in the net
+        Neuron(int wsize, double bi); // constructor 1: weights are set to 0
+        Neuron(std::vector<double> we, double bi); // constructor 2: more control over weights
+        
+        std::vector<double> weights; // the weights on the connections to other neurons
+        double value; // multiplied with weights to add to other neurons
+        double bias; // an offset to the weighted sum
     };
-    struct Layer {
+    
+    struct Layer { // represents a group of neurons
         public:
+            Layer(Layer* prevl, int nexsize, int size); // constructor
+            std::vector<double> showVal(); // gets value vector
+            std::vector<std::vector<double>> showWM(); // gets weight matrix
+            std::vector<double> getVal(); // changes the values of all neurons in the layer
+            void clear(); // clears the values of neurons
+            
             std::vector<Neuron*> neurons;
-            Layer* prev;
+            Layer* prev; // the previous layer
+
             friend struct Neuron;
             friend class Network;
-            Layer(Layer* prevl, int nexsize, int size);
-            void clear(); // clears neurons. 
-            std::vector<double> showVal(); // shows the values of all the neurons in a one-column matrix
-            std::vector<std::vector<double>> showWM(); // shows weight matrix as described below
-            std::vector<double> getVal(); // forward feed
             /*
             Use matrix multiplication: 
             Get a matrix w where one row is all the connections of the neurons
@@ -41,10 +38,16 @@ namespace AIH {
             This one-column matrix can be gotten with the showVal function.
             */
     };
-    class Network {
+
+    class Network { // represents all layers
         public:
+            Network(); // constructor
+            std::vector<double> run(); // gets all values for all nodes
+
             std::vector<Layer*> layers;
-            Network();
-            std::vector<double> run();
     };
+
+    double accs(double wsum); // Implements the sigmoid function. 
+    Eigen::MatrixXd mconv(std::vector<std::vector<double>> m); // converts std::vector to MatrixXd
+    Eigen::VectorXd vconv(std::vector<double> v); // converts std:vector to VectorXd
 }

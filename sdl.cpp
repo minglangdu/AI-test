@@ -67,17 +67,6 @@ void SDLH::Base::startLoop() {
     destroy();
 }
 
-void SDLH::Base::destroy() {
-    /*
-    Deallocates major objects. 
-    */
-    SDL_DestroyRenderer(renderer);
-    renderer = NULL;
-    SDL_DestroyWindow(window);
-    window = NULL;
-    SDL_Quit();
-}
-
 void SDLH::Base::loop() {
     /*
     Base main loop.
@@ -94,6 +83,17 @@ void SDLH::Base::loop() {
     SDL_RenderPresent(renderer);
 }
 
+void SDLH::Base::destroy() {
+    /*
+    Deallocates major objects. 
+    */
+    SDL_DestroyRenderer(renderer);
+    renderer = NULL;
+    SDL_DestroyWindow(window);
+    window = NULL;
+    SDL_Quit();
+}
+
 /*
 Display
 */
@@ -102,6 +102,21 @@ SDLH::Display::Display(int w, int h) : Base(w, h, "Main Display") {
     /*
     Constructor function for Display. Uses an initializer list. 
     */
+}
+
+int SDLH::Display::addAgent(Agent* a) {
+    /*
+    Adds an agent to the agent vector, a private data structure.
+    */
+    agents.push_back(a);
+    return agents.size() - 1; // returns index
+}
+
+vector<SDLH::Agent*> SDLH::Display::getAgents() {
+    /*
+    Gives access to the agents vector, a private data structure.
+    */
+    return agents;
 }
 
 void SDLH::Display::startLoop() {
@@ -141,21 +156,6 @@ void SDLH::Display::loop() {
     SDL_RenderPresent(renderer);
 }
 
-int SDLH::Display::addAgent(Agent* a) {
-    /*
-    Adds an agent to the agent vector, a private data structure.
-    */
-    agents.push_back(a);
-    return agents.size() - 1; // returns index
-}
-
-vector<SDLH::Agent*> SDLH::Display::getAgents() {
-    /*
-    Gives access to the agents vector, a private data structure.
-    */
-    return agents;
-}
-
 void SDLH::Display::createDebug() {
     /*
     Creates a debug window, assigns it to the Display db pointer, and initializes it.
@@ -173,12 +173,6 @@ Debug
 SDLH::Debug::Debug(int w, int h) : SDLH::Base(w, h, "Debug Screen") {
     /*
     Constructor function for debug, using an initializer list
-    */
-}
-
-void SDLH::Debug::startLoop() {
-    /* 
-    Intentionally left blank to stop a loop from being started.
     */
 }
 
@@ -286,6 +280,12 @@ void SDLH::Debug::showNetwork(AIH::Network* nn) {
     SDL_RenderPresent(renderer);
 }
 
+void SDLH::Debug::startLoop() {
+    /* 
+    Intentionally left blank to stop a loop from being started.
+    */
+}
+
 tuple<int, int, int> SDLH::Debug::redgreen(double val) { 
     /*
     Changes a double value into a color between red and green.
@@ -330,13 +330,6 @@ SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Base* b) {
     starttick = SDL_GetTicks(); // for use to calculate delta
 }
 
-void SDLH::Agent::draw(SDLH::Base* b) { 
-    /*
-    Draws the agent texture onto the screen.
-    */
-    SDL_RenderCopyEx(b->renderer, texture, NULL, hitbox, 90 - dir, NULL, SDL_FLIP_NONE);
-}
-
 void getInputs(AIH::Network* &nn) {
     /*
     changes inputs of the neural network
@@ -376,22 +369,21 @@ void SDLH::Agent::update(SDLH::Base* b) {
     double ny = pos.second - sin(dir * M_PI / 180) * speed * delta;
     double nx = pos.first + cos(dir * M_PI / 180) * speed * delta;
     // move back in bounds if out of bounds
-    if (ny < 0) {
-        ny += b->height;
-    }
-    if (nx < 0) {
-        nx += b->width;
-    }
-    if (nx > b->width) {
-        nx -= b->width;
-    } 
-    if (ny > b->height) {
-        ny -= b->height;
-    }
+    if (ny < 0) ny += b->height;
+    if (nx < 0) nx += b->width;
+    if (nx > b->width) nx -= b->width;
+    if (ny > b->height) ny -= b->height;
     // update internal positions
     pos.first = nx;
     pos.second = ny;
     // update hitbox positions
     hitbox->x = pos.first;
     hitbox->y = pos.second;
+}
+
+void SDLH::Agent::draw(SDLH::Base* b) { 
+    /*
+    Draws the agent texture onto the screen.
+    */
+    SDL_RenderCopyEx(b->renderer, texture, NULL, hitbox, 90 - dir, NULL, SDL_FLIP_NONE);
 }
