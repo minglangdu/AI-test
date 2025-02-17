@@ -255,14 +255,12 @@ void SDLH::Debug::showNetwork(AIH::Network* nn) {
             
             // add edges
             for (int k = 0; k < l->neurons[j]->weights.size(); k ++) {
-                // <!! LUMP OF KLUDGE !!> (TO FIX)
-                auto color = redgreen( // gets the difference in the value the edge causes.
-                    nn->layers[i + 1]->neurons[k]->value -
-                    AIH::accs(
-                    log((1 / nn->layers[i + 1]->neurons[k]->value) - 1) // sigmoid in reverse
-                    - n->weights[k] * n->value)
-                    );
-                // </!! LUMP OF KLUDGE !!>
+                // gets the difference in the value the edge causes.
+                double nval = nn->layers[i + 1]->neurons[k]->value; // next layer's val
+                double change = n->weights[k] * n->value; // what this weight adds to the wsum
+                double before = log((1 / nval) - 1); // the value before the sigmoid function
+                auto color = redgreen(nval - AIH::accs(before - change)); 
+                
                 // set draw color to difference in value edge causes
                 SDL_SetRenderDrawColor(renderer, get<0>(color), get<1>(color), get<2>(color), 0xFF);
                 // get x and y values for ends of edge
