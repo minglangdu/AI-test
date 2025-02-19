@@ -377,7 +377,6 @@ void SDLH::Agent::update(SDLH::Base* b) {
     // update hitbox positions
     hitbox->x = pos.first;
     hitbox->y = pos.second;
-    if (DEBUG) cout << hitbox->x << " " << hitbox->y << "\n";
 }
 
 void SDLH::Agent::draw(SDLH::Base* b) { 
