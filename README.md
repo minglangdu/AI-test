@@ -18,4 +18,6 @@ I have included several folders on this repository purely so that I don't have t
 These folders' creators are linked below: 
 
 - [SDL2](https://www.libsdl.org/)
+    - SDL2 is under the [zlib](https://www.zlib.net/zlib_license.html) license. Because I have only taken a portion of the code, the license is not within its folders. Instead view the license in the link.
 - [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page)
+    - Eigen is under the [MPL2](https://www.mozilla.org/en-US/MPL/2.0/). Because I have only taken a portion of the code, the license is not within its folders. Instead view the license in the link.
