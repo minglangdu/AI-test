@@ -8,6 +8,8 @@
 #include "sdl.h"
 #include "constants.h"
 
+#define EIGEN_MPL2_ONLY
+
 using namespace std;
 
 /*
