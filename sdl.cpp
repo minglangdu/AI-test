@@ -260,7 +260,7 @@ void SDLH::Debug::showNetwork(AIH::Network* nn) {
                 // gets the difference in the value the edge causes.
                 double nval = nn->layers[i + 1]->neurons[k]->value; // next layer's val
                 double change = n->weights[k] * n->value; // what this weight adds to the wsum
-                double before = log((1 / nval) - 1); // the value before the sigmoid function
+                double before = log(1 + nval / 1 - nval) / 2; // the value before the sigmoid function
                 auto color = redgreen(nval - AIH::accs(before - change)); 
                 
                 // set draw color to difference in value edge causes

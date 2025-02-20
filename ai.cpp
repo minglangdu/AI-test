@@ -179,8 +179,11 @@ double AIH::accs(double wsum) {
     /*
     Uses the sigmoid function to put values between 1 and 0.
     */
+    wsum = min(max(wsum, -5.0), 5.0);
     double cur = pow(M_E, wsum) - pow(M_E, -wsum) / pow(M_E, wsum) + pow(M_E, -wsum);
-    
+    if (cur == INFINITY || cur == -INFINITY) {
+        cout << "inf\n";
+    }
     return pow(M_E, wsum) - pow(M_E, -wsum) / pow(M_E, wsum) + pow(M_E, -wsum);
 }
 
