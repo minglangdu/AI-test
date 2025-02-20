@@ -6,7 +6,7 @@
 #include <vector>
 
 // sizes of different layers
-const std::vector<int> sizes = {2, 8, 8, 3, 0};
+const std::vector<int> sizes = {4, 8, 8, 3, 0};
 
 const double MAX_SPEED = 2.5;
 const double MAX_ANGVEL = 5;

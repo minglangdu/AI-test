@@ -330,19 +330,16 @@ SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Base* b) {
     starttick = SDL_GetTicks(); // for use to calculate delta
 }
 
-void getInputs(AIH::Network* &nn) {
+void getInputs(AIH::Network* &nn, SDLH::Agent* a) {
     /*
-    changes inputs of the neural network
+    Changes inputs of the neural network
     */
     AIH::Layer* inp = nn->layers[0];
-    // generate random numbers
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_real_distribution<double> dist(0.01, 1.0);
     // set inputs
-    for (int i = 0; i < inp->neurons.size(); i ++) {
-        inp->neurons[i]->value = dist(mt);
-    }
+    inp->neurons[0]->value = a->pos.first / (double)WINDOW_SIZE;
+    inp->neurons[1]->value = a->pos.second / (double)WINDOW_SIZE;
+    inp->neurons[2]->value = a->speed / MAX_SPEED;
+    inp->neurons[3]->value = a->angvel / MAX_ANGVEL;
 }
 
 void SDLH::Agent::update(SDLH::Base* b) {
@@ -350,7 +347,7 @@ void SDLH::Agent::update(SDLH::Base* b) {
     Updates neural network and position and direction.
     */
     // changes inputs
-    getInputs(nn);
+    getInputs(nn, this);
     // runs nn
     vector<double> a = nn->run();
     // sets angvel and speed based on outputs
