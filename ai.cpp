@@ -179,7 +179,12 @@ double AIH::accs(double wsum) {
     /*
     Uses the sigmoid function to put values between 1 and 0.
     */
-    return 1 / (1 + pow(M_E, -1 * wsum));
+    wsum = min(max(wsum, -5.0), 5.0);
+    double cur = pow(M_E, wsum) - pow(M_E, -wsum) / pow(M_E, wsum) + pow(M_E, -wsum);
+    if (cur == INFINITY || cur == -INFINITY) {
+        cout << "inf\n";
+    }
+    return pow(M_E, wsum) - pow(M_E, -wsum) / pow(M_E, wsum) + pow(M_E, -wsum);
 }
 
 MatrixXd AIH::mconv(vector<vector<double>> m) {
