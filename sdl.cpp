@@ -351,14 +351,16 @@ void SDLH::Agent::update(SDLH::Base* b) {
     // runs nn
     vector<double> a = nn->run();
     // sets angvel and speed based on outputs
-    angvel = (360 * a[1] - dir);
+    angvel = a[1] - dir;
     speed = a[0];
+    // cout << a[0] << " " << a[1] << "\n";
     // applies constraints
     angvel = max(min(angvel, MAX_ANGVEL), MAX_ANGVEL * -1);
     speed = max(min(speed, MAX_SPEED), MAX_SPEED * -1);
     // update direction
     dir += angvel;
-    dir -= 360 * floor(dir / 360);
+    double dec = dir - floor(dir);
+    dir = (int)dir % 360 + dec;
     // find delta and update ticks
     double delta = max((SDL_GetTicks() - starttick) / 5.0, 0.01);
     starttick = SDL_GetTicks();
