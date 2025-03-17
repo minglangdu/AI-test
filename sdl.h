@@ -6,13 +6,16 @@
 #include <map>
 #include <string>
 #include <tuple>
+#include <set>
 
 #include "ai.h"
 #include "constants.h"
 
 namespace SDLH {
-    struct Agent; // forward declaration so it can be used before defined
-    class Debug; // forward declaration of Debug
+    // forward declarations so they can be used before defined
+    struct Agent; 
+    struct Obstacle;
+    class Debug;
     
     class Base { // parent class of all windows
         public:
@@ -22,6 +25,7 @@ namespace SDLH {
             void loop(); // mainloop
             void destroy(); // deallocates objects
 
+            std::vector<SDL_Rect*> rects;
             SDL_Window* window; // the actual SDL window
             SDL_Renderer* renderer; // used to put objects onto the window
             int width, height;
@@ -35,13 +39,19 @@ namespace SDLH {
             Display(int width, int height);
             int addAgent(Agent* a); // add to the private agents vector
             std::vector<Agent*> getAgents(); // get the private agents vector
+            int addObstacle(Obstacle* o);
+            std::vector<Obstacle*> getObstacles();
             void startLoop();
             void loop(); // mainloop
             void createDebug(); // create the debug window if DEBUG_WIND is true
 
             Debug* db; // pointer to a debug window
+            // objects in these sets will be deleted.
+            std::set<Agent*> dela;
+            std::set<Obstacle*> delo;
         private:
             std::vector<Agent*> agents; // stores all agents
+            std::vector<Obstacle*> obstacles;
     };
     
     class Debug : public Base { // displays one agent's neural network. Shouldn't function independently from Display
@@ -56,10 +66,25 @@ namespace SDLH {
             std::tuple<int, int, int> redgreen(double val); // given a value between 0 and 1, gets color to represent it.
     };
     
+    struct Obstacle {
+        Obstacle(int x, int y, double dx, double dy, Display* b, Agent* creator);
+        void update(Display* b);
+        void draw(Display* b);
+
+        SDL_Rect* hitbox;
+        std::pair<double, double> pos;
+        double dx, dy;
+        Uint32 starttick;
+        Agent* creator;
+    };
+
     struct Agent {
-        Agent(int x, int y, double dir, int side, Base* b);
-        void update(Base* b); // change the position and direction and other factors
-        void draw(Base* b); // draw agent onto speed
+        Agent(int x, int y, double dir, int side, Display* b);
+        void update(Display* b); // change the position and direction and other factors
+        void draw(Display* b); // draw agent onto speed
+        double getRay(Display* b, double dir, std::vector<SDL_Rect*> boxes); // cast a ray in a direction and find distance to collision. 
+        // Maximum of SIGHTRAD, result divided by sightrad
+        void fire(Display* b, double dir);
 
         SDL_Rect* hitbox; // hitbox - do not use to get actual position
         std::pair<double, double> pos; // hitbox's values can only be ints, so this is used as a workaround
@@ -69,6 +94,9 @@ namespace SDLH {
         Uint32 starttick; // used with SDL_GetTick() to find time elapsed between frames
         SDL_Texture* texture; // the image used to represent the agent
         int side; // faction
+        double cooldown; // firing cooldown
+
         AIH::Network* nn; // neural network
+        double cost;
     };
 };
