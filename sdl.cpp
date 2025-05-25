@@ -12,6 +12,22 @@
 
 using namespace std;
 
+bool collision(SDL_Rect* hitbox, SDL_Rect* rect) {
+    int la = hitbox->x;
+    int lb = rect->x;
+    int ta = hitbox->y;
+    int tb = rect->y;
+    int ra = hitbox->x + hitbox->w;
+    int rb = rect->x + rect->w;
+    int ba = hitbox->y + hitbox->h;
+    int bb = rect->y + rect->h;
+    if (ba < tb || ta > bb || ra < lb || la > rb) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 /*
 Base
 */
@@ -79,7 +95,8 @@ void SDLH::Base::loop() {
         if (e.type == SDL_QUIT) quit = true;
         if (e.window.event == SDL_WINDOWEVENT_CLOSE) quit = true;
     }
-
+    // set background color
+    SDL_SetRenderDrawColor(renderer, 0x66, 0x66, 0x66, 0xFF);
     SDL_RenderClear(renderer);
     
     SDL_RenderPresent(renderer);
@@ -121,6 +138,21 @@ vector<SDLH::Agent*> SDLH::Display::getAgents() {
     return agents;
 }
 
+int SDLH::Display::addObstacle(Obstacle* o) {
+    /*
+    Adds an obstacle to a private obstacle vector.
+    */
+    obstacles.push_back(o);
+    return obstacles.size() - 1;
+}
+
+vector<SDLH::Obstacle*> SDLH::Display::getObstacles() {
+    /*
+    Gives access to a private obstacle vector.
+    */
+    return obstacles;
+}
+
 void SDLH::Display::startLoop() {
     /*
     Runs the loop using a while loop.
@@ -143,12 +175,29 @@ void SDLH::Display::loop() {
         // needed because SDL_QUIT will only happen if both windows are closed simultaneously.
         if (e.window.event == SDL_WINDOWEVENT_CLOSE) quit = true; 
     }
-    
+    // set background color
+    SDL_SetRenderDrawColor(renderer, 0x66, 0x66, 0x66, 0xFF);
     SDL_RenderClear(renderer);
     
     for (Agent* a : agents) {
         a->update(this);
         a->draw(this);
+    }
+
+    for (Obstacle* o : obstacles) {
+        o->update(this);
+        o->draw(this);
+    }
+    // erases objects marked for deletion
+    for (Agent* a : agents) {
+        if (dela.count(a)) {
+            agents.erase(std::remove(agents.begin(), agents.end(), a), agents.end());
+        }
+    }
+    for (Obstacle* o : obstacles) {
+        if (delo.count(o)) {
+            obstacles.erase(std::remove(obstacles.begin(), obstacles.end(), o), obstacles.end());
+        }
     }
 
     if (DEBUG_WIND) {
@@ -295,10 +344,73 @@ tuple<int, int, int> SDLH::Debug::redgreen(double val) {
 }
 
 /*
+Obstacle
+*/
+
+SDLH::Obstacle::Obstacle(int x, int y, double dx, double dy, SDLH::Display* b, SDLH::Agent* creator) {
+    /*
+    Constructor for Obstacles which will increase the cost of agents it intersects with. 
+    */
+    hitbox = new SDL_Rect();
+    hitbox->x = x;
+    hitbox->y = y;
+    hitbox->h = OBSTACLE_SIZE;
+    hitbox->w = OBSTACLE_SIZE;
+    pos = {x, y};
+    this->dx = dx;
+    this->dy = dy;
+    this->creator = creator;
+    starttick = SDL_GetTicks();
+    b->rects.push_back(hitbox);
+}
+
+void SDLH::Obstacle::update(SDLH::Display* b) {
+    /*
+    Moves the obstacle and checks for any hits.
+    */
+    bool hit = false;
+    // find delta and update ticks
+    double delta = max((SDL_GetTicks() - starttick) / 5.0, 0.01);
+    starttick = SDL_GetTicks();
+    // find new positions
+    double ny = pos.second + dy * delta;
+    double nx = pos.first + dx * delta;
+    // move back in bounds if out of bounds
+    if (ny < 0) ny += b->height;
+    if (nx < 0) nx += b->width;
+    if (nx > b->width) nx -= b->width;
+    if (ny > b->height) ny -= b->height;
+    if (ny < 0 || nx < 0 || nx > b->width || ny > b->height) hit = true;
+    // update internal positions
+    pos.first = nx;
+    pos.second = ny;
+    // update hitbox positions
+    hitbox->x = pos.first;
+    hitbox->y = pos.second;
+    // check for collisions
+    auto ags = b->getAgents();
+    for (SDLH::Agent* ag : ags) {
+        if (creator == ag) continue;
+        if (collision(ag->hitbox, hitbox)) {
+            ag->cost += HIT_COST;
+            hit = true;
+        }
+    }
+    if (hit) {
+        b->delo.insert(this);
+    }
+}
+
+void SDLH::Obstacle::draw(SDLH::Display* b) {
+    SDL_SetRenderDrawColor(b->renderer, 0xFF, 0x00, 0x00, 0xFF);
+    SDL_RenderFillRect(b->renderer, hitbox);
+}
+
+/*
 Agent
 */
 
-SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Base* b) {
+SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Display* b) {
     /*
     Constructor for Agent structure. 
     */
@@ -328,6 +440,9 @@ SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Base* b) {
     side = side; // ai faction
     nn = new AIH::Network(); // neural network
     starttick = SDL_GetTicks(); // for use to calculate delta
+    cost = 0;
+    b->rects.push_back(this->hitbox);
+    cooldown = OBSTACLE_COOLDOWN;
 }
 
 void getInputs(AIH::Network* &nn, SDLH::Agent* a) {
@@ -342,7 +457,7 @@ void getInputs(AIH::Network* &nn, SDLH::Agent* a) {
     inp->neurons[3]->value = a->angvel / MAX_ANGVEL;
 }
 
-void SDLH::Agent::update(SDLH::Base* b) {
+void SDLH::Agent::update(SDLH::Display* b) {
     /*
     Updates neural network and position and direction.
     */
@@ -378,11 +493,29 @@ void SDLH::Agent::update(SDLH::Base* b) {
     // update hitbox positions
     hitbox->x = pos.first;
     hitbox->y = pos.second;
+    // fires obstacles
+    if (a[2] >= 0.5) {
+        fire(b, dir);
+    }
+    cooldown = max(0.0, cooldown - delta);
 }
 
-void SDLH::Agent::draw(SDLH::Base* b) { 
+void SDLH::Agent::draw(SDLH::Display* b) { 
     /*
     Draws the agent texture onto the screen.
     */
     SDL_RenderCopyEx(b->renderer, texture, NULL, hitbox, 90 - dir, NULL, SDL_FLIP_NONE);
+}
+
+double SDLH::Agent::getRay(SDLH::Display* b, double dir, vector<SDL_Rect*> boxes) {
+    return 1;
+}
+
+void SDLH::Agent::fire(SDLH::Display* b, double dir) {
+    if (cooldown > 0) return; 
+    cost += FIRE_COST;
+    cooldown = OBSTACLE_COOLDOWN;
+    double dx = cos(dir * M_PI / 180) * OBSTACLE_SPEED;
+    double dy = -1 * sin(dir * M_PI / 180) * OBSTACLE_SPEED;
+    b->addObstacle(new Obstacle(pos.first, pos.second, dx, dy, b, this));
 }
