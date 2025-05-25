@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <vector>
-#include "Eigen/Dense"
 
 #include "constants.h"
 
@@ -48,6 +47,4 @@ namespace AIH {
     };
 
     double accs(double wsum); // Implements the activation function
-    Eigen::MatrixXd mconv(std::vector<std::vector<double>> m); // converts std::vector to MatrixXd
-    Eigen::VectorXd vconv(std::vector<double> v); // converts std:vector to VectorXd
 }

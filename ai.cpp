@@ -2,14 +2,11 @@
 #include <cmath>
 #include <vector>
 #include <random>
-#include "Eigen/Dense"
 
 #include "ai.h"
 #include "constants.h"
 
 using namespace std;
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
 
 /*
 Neuron
@@ -91,19 +88,16 @@ vector<double> AIH::Layer::getVal() {
         return {};
     }
     // get weight matrix and value vector
-    vector<vector<double>> wm = AIH::Layer::showWM();
-    vector<double> va = AIH::Layer::showVal();
-    // uses eigen library to make into eigen-recognized matrix.
-    MatrixXd wmm = mconv(wm);
-    VectorXd vam = vconv(va);
-    if (DEBUG) {
-        cout << "wmm " << wmm.rows() << " " << wmm.cols() << "\n";
-        cout << "vam " << vam.rows() << " " << vam.cols() << "\n";
-    }
+    vector<vector<double>> wm = AIH::Layer::showWM(); // row size: prev neurons; col size: new neurons
+    vector<double> va = AIH::Layer::showVal(); // size: prev neurons
     // matrix multiply the two variables
-    MatrixXd res = wmm * vam;
-    // convert the resulting MatrixXd into a single-vector std::vector
-    vector<double> vres (res.data(), res.data() + res.rows() * res.cols());
+    // loop through columns since we want weights from all prev neurons
+    vector<double> vres (wm[0].size(), 0); // size: new neurons
+    for (int i = 0; i < wm.size(); i ++) {
+        for (int j = 0; j < wm[i].size(); j ++) {
+            vres[j] += wm[i][j] * va[i];
+        }
+    }
     // create new vector vals that stores the final result
     vector<double> vals (neurons.size(), 0);
     for (int i = 0; i < neurons.size(); i ++) {
@@ -185,28 +179,4 @@ double AIH::accs(double wsum) {
         cout << "inf\n";
     }
     return pow(M_E, wsum) - pow(M_E, -wsum) / pow(M_E, wsum) + pow(M_E, -wsum);
-}
-
-MatrixXd AIH::mconv(vector<vector<double>> m) {
-    /*
-    Converts vector matrix into MatrixXd
-    */
-    MatrixXd res (m[0].size(), m.size());
-    for (int i = 0; i < m.size(); i ++) {
-        for (int j = 0; j < m[0].size(); j ++) {
-            res(j, i) = m[i][j];
-        }
-    }
-    return res;
-}
-
-VectorXd AIH::vconv(vector<double> v) {
-    /*
-    Converts single std::vector into VectorXd
-    */
-    VectorXd res (v.size());
-    for (int i = 0; i < v.size(); i ++) {
-        res(i) = v[i];
-    }
-    return res;
 }
