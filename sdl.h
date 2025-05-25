@@ -21,8 +21,7 @@ namespace SDLH {
         public:
             Base(int width, int height, std::string title);
             void initBasics(); // initialize the window but not agents
-            void startLoop(); // keeps running loop()
-            void loop(); // mainloop
+            virtual void loop(); // mainloop
             void destroy(); // deallocates objects
 
             std::vector<SDL_Rect*> rects;
@@ -39,10 +38,11 @@ namespace SDLH {
             Display(int width, int height);
             int addAgent(Agent* a); // add to the private agents vector
             std::vector<Agent*> getAgents(); // get the private agents vector
+            void clearAgents(); // empty the agents vector
             int addObstacle(Obstacle* o);
             std::vector<Obstacle*> getObstacles();
-            void startLoop();
-            void loop(); // mainloop
+            void clearObstacles();
+            void loop() override; // mainloop
             void createDebug(); // create the debug window if DEBUG_WIND is true
 
             Debug* db; // pointer to a debug window
@@ -59,8 +59,7 @@ namespace SDLH {
             Debug(int width, int height);
             void getLocs(AIH::Network* nn); // sets the positions in locs. 
             void showNetwork(AIH::Network* nn); // used in place of loop() and startloop(). called by Display
-            void startLoop(); // this function is here simply to redefine the inherited function to not do anything
-
+  
             std::vector<std::vector<std::pair<int, int>>> locs; // locations of various nodes in the visual representation of the network.
         private:
             std::tuple<int, int, int> redgreen(double val); // given a value between 0 and 1, gets color to represent it.

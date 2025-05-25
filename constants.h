@@ -31,3 +31,6 @@ const int YOFF = 375; // how much to move the representation down
 const int NSIZE = 15; // how large the node representation is
 const int XGAP = 150; // the gap between nodes in the window
 const int YGAP = 75;
+
+const int EPOCH_LENGTH = 600;
+const int EPOCH_AMOUNT = 5;

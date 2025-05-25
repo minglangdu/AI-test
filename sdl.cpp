@@ -74,17 +74,6 @@ void SDLH::Base::initBasics() {
     SDL_RaiseWindow(window);
 }
 
-void SDLH::Base::startLoop() {
-    /*
-    Runs the loops using a while loop.
-    */
-    quit = false;
-    while (!quit) {
-        loop();
-    }
-    destroy();
-}
-
 void SDLH::Base::loop() {
     /*
     Base main loop.
@@ -138,6 +127,13 @@ vector<SDLH::Agent*> SDLH::Display::getAgents() {
     return agents;
 }
 
+void SDLH::Display::clearAgents() {
+    /*
+    Clears the agents vector.
+    */
+    agents.clear();
+}
+
 int SDLH::Display::addObstacle(Obstacle* o) {
     /*
     Adds an obstacle to a private obstacle vector.
@@ -153,15 +149,11 @@ vector<SDLH::Obstacle*> SDLH::Display::getObstacles() {
     return obstacles;
 }
 
-void SDLH::Display::startLoop() {
+void SDLH::Display::clearObstacles() {
     /*
-    Runs the loop using a while loop.
+    Clears the obstacles vector.
     */
-    quit = false;
-    while (!quit) {
-        loop();
-    }
-    destroy();
+    obstacles.clear();
 }
 
 void SDLH::Display::loop() {
@@ -327,12 +319,6 @@ void SDLH::Debug::showNetwork(AIH::Network* nn) {
     }
     // actually draw everything onto the screen.
     SDL_RenderPresent(renderer);
-}
-
-void SDLH::Debug::startLoop() {
-    /* 
-    Intentionally left blank to stop a loop from being started.
-    */
 }
 
 tuple<int, int, int> SDLH::Debug::redgreen(double val) { 

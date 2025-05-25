@@ -47,7 +47,7 @@ namespace AIH {
             std::vector<Layer*> layers;
     };
 
-    double accs(double wsum); // Implements the sigmoid function. 
+    double accs(double wsum); // Implements the activation function
     Eigen::MatrixXd mconv(std::vector<std::vector<double>> m); // converts std::vector to MatrixXd
     Eigen::VectorXd vconv(std::vector<double> v); // converts std:vector to VectorXd
 }
