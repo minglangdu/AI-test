@@ -4,3 +4,4 @@
 /main.o
 /ai.o
 .vscode
+networks/agent.csv

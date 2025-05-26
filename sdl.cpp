@@ -167,7 +167,7 @@ void SDLH::Display::loop() {
         if (e.window.event == SDL_WINDOWEVENT_CLOSE) quit = true; 
     }
     // set background color
-    SDL_SetRenderDrawColor(renderer, 0x66, 0x66, 0x66, 0xFF);
+    SDL_SetRenderDrawColor(renderer, 0x11, 0x11, 0x11, 0xFF);
     SDL_RenderClear(renderer);
     
     for (Agent* a : agents) {
@@ -361,10 +361,10 @@ void SDLH::Obstacle::update(SDLH::Display* b) {
     double ny = pos.second + dy * delta;
     double nx = pos.first + dx * delta;
     // move back in bounds if out of bounds
-    if (ny < 0) ny += b->height;
-    if (nx < 0) nx += b->width;
-    if (nx > b->width) nx -= b->width;
-    if (ny > b->height) ny -= b->height;
+    if (ny < 0) hit = true;
+    if (nx < 0) hit = true;
+    if (nx > b->width) hit = true;
+    if (ny > b->height) hit = true;
     if (ny < 0 || nx < 0 || nx > b->width || ny > b->height) hit = true;
     // update internal positions
     pos.first = nx;
@@ -378,6 +378,7 @@ void SDLH::Obstacle::update(SDLH::Display* b) {
         if (creator == ag) continue;
         if (collision(ag->hitbox, hitbox)) {
             ag->cost += HIT_COST;
+            creator->cost += HIT_REWARD;
             hit = true;
         }
     }
@@ -475,6 +476,15 @@ void SDLH::Agent::draw(SDLH::Display* b) {
     /*
     Draws the agent texture onto the screen.
     */
+    if (SHOW_COSTS) {
+        double most = 1;
+        for (Agent* a : b->getAgents()) {
+            most = max(most, a->cost);
+        }
+        SDL_SetRenderDrawColor(b->renderer, 255 * (cost/most), 255 - 255 * (cost/most), 0x00, 0xFF);
+    } else {
+        SDL_SetRenderDrawColor(b->renderer, 0x00, 0x00, 0x00, 0xFF);
+    }
     auto rotate = [] (pair<float, float> p, pair<float, float> r, double angle) -> pair<float, float> {
         float x = p.first, y = p.second, rx = r.first, ry = r.second;
         x -= rx; y -= ry;
@@ -496,7 +506,6 @@ void SDLH::Agent::draw(SDLH::Display* b) {
     right = rotate(right, midp, 90 - dir);
     pair<float, float> down = make_pair((x1 + x2) / 2, y1 + (y2 - y1) / 2);
     down = rotate(down, midp, 90 - dir);
-    SDL_SetRenderDrawColor(b->renderer, 0x00, 0x00, 0x00, 0xFF);
     SDL_RenderDrawLineF(b->renderer, top.first, top.second, left.first, left.second);
     SDL_RenderDrawLineF(b->renderer, top.first, top.second, right.first, right.second);
     SDL_RenderDrawLineF(b->renderer, down.first, down.second, left.first, left.second);

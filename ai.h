@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
 
 #include "constants.h"
 
@@ -41,7 +42,10 @@ namespace AIH {
     class Network { // represents all layers
         public:
             Network(); // constructor
+            Network(std::string stored); // reconstruct based on different weights
             std::vector<double> run(); // gets all values for all nodes
+            std::string store(std::string path=""); // store weights and biases in a string format
+            void mutate(double amount); // mutate the current weights and biases
 
             std::vector<Layer*> layers;
     };

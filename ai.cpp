@@ -2,6 +2,8 @@
 #include <cmath>
 #include <vector>
 #include <random>
+#include <string>
+#include <fstream>
 
 #include "ai.h"
 #include "constants.h"
@@ -137,6 +139,42 @@ AIH::Network::Network() {
     layers = res;
 }
 
+AIH::Network::Network(string stored) {
+    /*
+    Network constructor. Uses stored weights and biases to 
+    inititalize.
+    */
+    vector<double> vals;
+    string cur = "";
+    for (char c : stored) {
+        if (c == ',') {
+            if (cur != "") {
+                vals.push_back(stod(cur));
+            }
+            cur = "";
+        } else {
+            cur += c;
+        }
+    }
+    vector<vector<pair<double, vector<double>>>> parsed;
+    int nstart = 0;
+    vector<Layer*> res;
+    for (int i = 0; i < sizes.size() - 1; i ++) {
+        // each layer
+        Layer* prev = i == 0 ? NULL : res[i - 1];
+        Layer* next = new Layer(prev, sizes[i + 1], sizes[i]);
+        for (int j = 0; j < sizes[i]; j ++) {
+            next->neurons[j]->bias = vals[nstart];
+            for (int k = 0; k < sizes[i + 1]; k ++) {
+                next->neurons[j]->weights[k] = vals[nstart + k + 1];
+            }
+        }
+        res.push_back(next);
+        nstart += 1 + sizes[i + 1];
+    }
+    layers = res;
+}
+
 vector<double> AIH::Network::run() {
     /*
     Simulate the neural network and set values.
@@ -163,6 +201,54 @@ vector<double> AIH::Network::run() {
     }
     if (DEBUG) cout << "</run>\n";
     return res;
+}
+
+string AIH::Network::store(string path) {
+    /*
+    Stores weights and biases of each layer into a string. Optionally
+    stores them in a file if a path to the text file is provided.
+    */
+    string res = "";
+    for (int i = 0; i < layers.size(); i ++) {
+        Layer* l = layers[i];
+        for (int j = 0; j < l->neurons.size(); j ++) {
+            Neuron* n = l->neurons[j];
+            res += to_string(n->bias) + ",";
+            for (int k = 0; k < n->weights.size(); k ++) {
+                res += to_string(n->weights[k]) + ",";
+            }
+        } 
+    }
+    if (res.size() > 0) {
+        // remove last comma
+        res.pop_back();
+    }
+    if (path != "") {
+        ofstream fout;
+        fout.open(path);
+        fout << res << "\n";
+        fout.close();
+    }
+    return res;
+}
+
+void AIH::Network::mutate(double amount) {
+    /*
+    Changes the weights and biases of each layer using randomness.
+    */
+    random_device rd;
+    mt19937 mt(rd());
+    uniform_real_distribution<double> dist(-amount, amount);
+    for (int i = 0; i < layers.size(); i ++) {
+        Layer* l = layers[i];
+        for (int j = 0; j < l->neurons.size(); j ++) {
+            Neuron* n = l->neurons[j];
+            n->bias += dist(mt);
+            for (int k = 0; k < n->weights.size(); k ++) {
+                n->weights[k] += dist(mt);
+            }
+        } 
+    }
 }
 
 /*
