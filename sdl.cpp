@@ -405,20 +405,6 @@ SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Display* b) {
     hitbox->y = y;
     hitbox->w = AGENT_SIZE;
     hitbox->h = AGENT_SIZE;
-    // load bitmap image onto surface
-    SDL_Surface* surf = SDL_LoadBMP("images/agent.bmp");
-    if (!surf) {
-        cout << "Couldn't load surface.\n";
-        cout << SDL_GetError() << "\n";
-        return;
-    }
-    // convert surface into SDL_Texture
-    texture = SDL_CreateTextureFromSurface(b->renderer, surf);
-    if (!texture) {
-        cout << "Couldn't create texture.\n";
-        cout << SDL_GetError() << "\n";
-        return;
-    }
     pos = {x, y}; // set position
     speed = 0; // initialize speed
     dir = dir; // initialize direction

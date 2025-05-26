@@ -91,7 +91,6 @@ namespace SDLH {
         double speed; // speed
         double angvel; // angular velocity
         Uint32 starttick; // used with SDL_GetTick() to find time elapsed between frames
-        SDL_Texture* texture; // the image used to represent the agent
         int side; // faction
         double cooldown; // firing cooldown
 
