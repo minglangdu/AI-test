@@ -29,7 +29,6 @@ int main() {
         while (!b->quit && tick < EPOCH_LENGTH) {
             b->loop();
             tick ++;
-            cout << tick << "\n";
         }
         if (b->quit) { // manually closed
             break;

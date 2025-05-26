@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <tuple>
+#include <cmath>
 
 #include "sdl.h"
 #include "constants.h"
@@ -488,7 +489,32 @@ void SDLH::Agent::draw(SDLH::Display* b) {
     /*
     Draws the agent texture onto the screen.
     */
-    SDL_RenderCopyEx(b->renderer, texture, NULL, hitbox, 90 - dir, NULL, SDL_FLIP_NONE);
+    auto rotate = [] (pair<float, float> p, pair<float, float> r, double angle) -> pair<float, float> {
+        float x = p.first, y = p.second, rx = r.first, ry = r.second;
+        x -= rx; y -= ry;
+        double rad = angle * (M_PI / 180);
+        int cx = x * cos(rad) - y * sin(rad);
+        int cy = y * cos(rad) + x * sin(rad);
+        return make_pair(cx + rx, cy + ry);
+    };
+    float x1 = pos.first, 
+    y1 = pos.second, 
+    x2 = x1 + hitbox->w, 
+    y2 = y1 + hitbox->h;
+    pair<float, float> midp = make_pair((x1 + x2) / 2, y1 + (y2 - y1) / 2);
+    pair<float, float> top = make_pair((x1 + x2) / 2, y1);
+    top = rotate(top, midp, 90 - dir);
+    pair<float, float> left = make_pair(x1, y2);
+    left = rotate(left, midp, 90 - dir);
+    pair<float, float> right = make_pair(x2, y2);
+    right = rotate(right, midp, 90 - dir);
+    pair<float, float> down = make_pair((x1 + x2) / 2, y1 + (y2 - y1) / 2);
+    down = rotate(down, midp, 90 - dir);
+    SDL_SetRenderDrawColor(b->renderer, 0x00, 0x00, 0x00, 0xFF);
+    SDL_RenderDrawLineF(b->renderer, top.first, top.second, left.first, left.second);
+    SDL_RenderDrawLineF(b->renderer, top.first, top.second, right.first, right.second);
+    SDL_RenderDrawLineF(b->renderer, down.first, down.second, left.first, left.second);
+    SDL_RenderDrawLineF(b->renderer, down.first, down.second, right.first, right.second);
 }
 
 double SDLH::Agent::getRay(SDLH::Display* b, double dir, vector<SDL_Rect*> boxes) {
