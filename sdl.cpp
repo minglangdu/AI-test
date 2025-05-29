@@ -470,6 +470,7 @@ void SDLH::Agent::update(SDLH::Display* b) {
         fire(b, dir);
     }
     cooldown = max(0.0, cooldown - delta);
+    cost += (abs(angvel) + abs(speed)) * 0.1;
 }
 
 void SDLH::Agent::draw(SDLH::Display* b) { 
@@ -478,10 +479,12 @@ void SDLH::Agent::draw(SDLH::Display* b) {
     */
     if (SHOW_COSTS) {
         double most = 1;
+        double least = 0;
         for (Agent* a : b->getAgents()) {
             most = max(most, a->cost);
+            least = min(least, a->cost);
         }
-        SDL_SetRenderDrawColor(b->renderer, 255 * (cost/most), 255 - 255 * (cost/most), 0x00, 0xFF);
+        SDL_SetRenderDrawColor(b->renderer, 255 * ((cost - least)/(most)), 255 - 255 * ((cost - least)/(most)), 0x00, 0xFF);
     } else {
         SDL_SetRenderDrawColor(b->renderer, 0x00, 0x00, 0x00, 0xFF);
     }
@@ -523,4 +526,43 @@ void SDLH::Agent::fire(SDLH::Display* b, double dir) {
     double dx = cos(dir * M_PI / 180) * OBSTACLE_SPEED;
     double dy = -1 * sin(dir * M_PI / 180) * OBSTACLE_SPEED;
     b->addObstacle(new Obstacle(pos.first, pos.second, dx, dy, b, this));
+}
+
+/*
+Ray
+*/
+
+SDLH::Ray::Ray(double x, double y, double ang) {
+    /*
+    Initializes ray and converts an angle measure into 
+    dx and dy.
+    */
+    this->x = x;
+    this->y = y;
+    double radians = ang * (M_PI / 180);
+    this->dx = cos(radians);
+    this->dy = sin(radians);    
+}
+
+double SDLH::Ray::intersection(SDL_Rect* hitbox) {
+    /*
+    Gets the hitbox of an agent or obstacle and then 
+    checks if it hits. Then, it returns the distance
+    to that agent or obstacle.
+    */
+    int x1 = hitbox->x, y1 = hitbox->y;
+    int x2 = x1 + hitbox->w, y2 = y1 + hitbox->h;
+    // placeholder
+    return 0.3;
+}
+
+double SDLH::Ray::update(double x, double y, double ang) {
+    /*
+    Update x, y, and angle.
+    */
+    this->x = x;
+    this->y = y;
+    double radians = ang * (M_PI / 180);
+    this->dx = cos(radians);
+    this->dy = sin(radians);
 }

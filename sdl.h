@@ -97,4 +97,13 @@ namespace SDLH {
         AIH::Network* nn; // neural network
         double cost;
     };
+
+    struct Ray {
+        Ray(double x, double y, double ang); // ray constructor
+        double intersection(SDL_Rect* hitbox); // check intersection
+        double update(double x, double y, double ang); // change 
+
+        double x, y;
+        double dx, dy;
+    };
 };

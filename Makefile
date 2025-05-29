@@ -1,6 +1,5 @@
 .SILENT: goal
 goal:
-	-rm networks/agent.csv
 	echo "Compiling sdl.cpp..."
 	-g++ sdl.cpp -std=c++11 -c \
 	-I /opt/homebrew/include
