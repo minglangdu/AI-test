@@ -541,18 +541,95 @@ SDLH::Ray::Ray(double x, double y, double ang) {
     double radians = ang * (M_PI / 180);
     this->dx = cos(radians);
     this->dy = sin(radians);    
+    this->ang = ang * (M_PI / 180);
+    if (this->ang < 0) {
+        this->ang = abs(this->ang);
+    }
+    if (this->ang > 2 * M_PI) {
+        this->ang -= 2 * M_PI * floor(this->ang / (2 * M_PI));
+    }
+    // ensures angle is between 0 and 2PI
 }
 
-double SDLH::Ray::intersection(SDL_Rect* hitbox) {
+bool SDLH::Ray::inbounds(pair<double, double> point) {
+    /*
+    Given a point, check if the point is on the ray. 
+    */
+    double slope = tan(ang);
+    double diff = point.first - x;
+    if (abs((slope * diff + y) - point.second) < 0.01) {
+        // on the line encompassing the ray
+        if (ang >= (M_PI / 2) && ang <= (3 * M_PI / 2)) {
+            // going to the left
+            if (point.first <= x) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            // going to the right
+            if (point.first >= x) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    } else {
+        // not on the line
+        return false;
+    }
+    // if the flow goes here, good luck ig
+    return false;
+}
+
+double SDLH::Ray::lconverge(pair<int, int> a, pair<int, int> b) {
+    /*
+    Checks if the ray hits a line and then returns 
+    its distance to that line or 1e9 if it missed. 
+    */
+    double rslope = tan(ang); // slope of this ray
+    double lslope = (a.second - b.second) / (a.first - b.first); // line slope
+    /* formula for standard form from point-slope:
+    y - mx = y1 - mx1
+    so if B = 1, A = -m and C = y1 - mx1
+    */
+    // formula for determinant is A1 * B2 - A2 * B1
+    double det = -rslope + lslope;
+    if (rslope == lslope) {
+        // coincident or parallel
+        return 1e9;
+    } else {
+        /* formula for intersection is
+        for x: (B2 * C1 − B1 * C2)​ / det
+        for y: (A1 * C2 - A2 * C1) / det
+        */
+        int c1 = y - rslope * x;
+        int c2 = a.second - lslope * a.first;
+        pair<double, double> point;
+        point.first = (c1 - c2) / det;
+        point.second = (-rslope * c2 + lslope * c1) / det;
+        if (inbounds(point)) {
+            double dist = sqrt(pow(point.first - x, 2) + pow(point.second - y, 2));
+        } else {
+            return 1e9;
+        }
+    }
+}
+
+double SDLH::Ray::hconverge(SDL_Rect* hitbox) {
     /*
     Gets the hitbox of an agent or obstacle and then 
     checks if it hits. Then, it returns the distance
-    to that agent or obstacle.
+    to that agent or obstacle or 1e9 if it missed.
     */
     int x1 = hitbox->x, y1 = hitbox->y;
     int x2 = x1 + hitbox->w, y2 = y1 + hitbox->h;
-    // placeholder
-    return 0.3;
+    double ans = 1e9;
+    ans = min(ans, lconverge({x1, y1}, {x2, y1}));
+    ans = min(ans, lconverge({x1, y1}, {x1, y2}));
+    ans = min(ans, lconverge({x1, y2}, {x2, y2}));
+    ans = min(ans, lconverge({x2, y1}, {x2, y2}));
+    return ans;
 }
 
 void SDLH::Ray::update(double x, double y, double ang) {
@@ -564,4 +641,26 @@ void SDLH::Ray::update(double x, double y, double ang) {
     double radians = ang * (M_PI / 180);
     this->dx = cos(radians);
     this->dy = sin(radians);
+}
+
+double SDLH::Ray::agint(vector<Agent*> v) {
+    /*
+    Get closest intersection with agents in vector. 
+    */
+    double ans = 1e9;
+    for (Agent* a : v) {
+        ans = min(ans, hconverge((*a).hitbox));
+    }
+    return ans;
+}
+
+double SDLH::Ray::obint(vector<Obstacle*> v) {
+    /*
+    Get closest intersection with obstacles in vector. 
+    */
+    double ans = 1e9;
+    for (Obstacle* a : v) {
+        ans = min(ans, hconverge((*a).hitbox));
+    }
+    return ans;
 }
