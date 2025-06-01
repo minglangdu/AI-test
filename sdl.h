@@ -101,7 +101,7 @@ namespace SDLH {
     struct Ray {
         Ray(double x, double y, double ang); // ray constructor
         double intersection(SDL_Rect* hitbox); // check intersection
-        double update(double x, double y, double ang); // change 
+        void update(double x, double y, double ang); // change 
 
         double x, y;
         double dx, dy;

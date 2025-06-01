@@ -470,7 +470,6 @@ void SDLH::Agent::update(SDLH::Display* b) {
         fire(b, dir);
     }
     cooldown = max(0.0, cooldown - delta);
-    cost += (abs(angvel) + abs(speed)) * 0.1;
 }
 
 void SDLH::Agent::draw(SDLH::Display* b) { 
@@ -556,7 +555,7 @@ double SDLH::Ray::intersection(SDL_Rect* hitbox) {
     return 0.3;
 }
 
-double SDLH::Ray::update(double x, double y, double ang) {
+void SDLH::Ray::update(double x, double y, double ang) {
     /*
     Update x, y, and angle.
     */
