@@ -15,6 +15,7 @@ namespace SDLH {
     // forward declarations so they can be used before defined
     struct Agent; 
     struct Obstacle;
+    struct Ray;
     class Debug;
     
     class Base { // parent class of all windows
@@ -96,6 +97,8 @@ namespace SDLH {
 
         AIH::Network* nn; // neural network
         double cost;
+
+        std::vector<Ray*> rays; // sight
     };
 
     struct Ray {

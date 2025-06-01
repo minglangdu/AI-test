@@ -415,18 +415,31 @@ SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Display* b) {
     cost = 0;
     b->rects.push_back(this->hitbox);
     cooldown = OBSTACLE_COOLDOWN;
+    for (int i = 0; i < RAY_AMOUNT; i ++) {
+        rays.push_back(new Ray(x, y, 
+            dir - (SIGHT_ANGLE / 2) + i * (SIGHT_ANGLE / (RAY_AMOUNT - 1))));
+    }
 }
 
-void getInputs(AIH::Network* &nn, SDLH::Agent* a) {
+void getInputs(AIH::Network* &nn, SDLH::Agent* a, SDLH::Display* b) {
     /*
     Changes inputs of the neural network
     */
     AIH::Layer* inp = nn->layers[0];
     // set inputs
-    inp->neurons[0]->value = a->pos.first / (double)WINDOW_SIZE;
-    inp->neurons[1]->value = a->pos.second / (double)WINDOW_SIZE;
-    inp->neurons[2]->value = a->speed / MAX_SPEED;
-    inp->neurons[3]->value = a->angvel / MAX_ANGVEL;
+    vector<SDLH::Agent*> agents = b->getAgents();
+    for (int i = 0; i < RAY_AMOUNT; i ++) {
+        (a->rays[i])->update(a->pos.first, a->pos.second, 
+            a->dir - (SIGHT_ANGLE / 2) + i * (SIGHT_ANGLE / (RAY_AMOUNT - 1)));
+        double cur = a->rays[i]->agint(agents);
+        if (cur == 1e9) {
+            inp->neurons[i]->value = 1; 
+        } else {
+            inp->neurons[i]->value =  cur / (WINDOW_SIZE * sqrt(2)); // longest possible length
+        }
+    }
+    inp->neurons[RAY_AMOUNT]->value = (a->speed + MAX_SPEED) / 2 * MAX_SPEED;
+    inp->neurons[RAY_AMOUNT + 1]->value = (a->angvel + MAX_ANGVEL) / 2 * MAX_ANGVEL;
 }
 
 void SDLH::Agent::update(SDLH::Display* b) {
@@ -434,7 +447,7 @@ void SDLH::Agent::update(SDLH::Display* b) {
     Updates neural network and position and direction.
     */
     // changes inputs
-    getInputs(nn, this);
+    getInputs(nn, this, b);
     // runs nn
     vector<double> a = nn->run();
     // sets angvel and speed based on outputs
@@ -485,7 +498,7 @@ void SDLH::Agent::draw(SDLH::Display* b) {
         }
         SDL_SetRenderDrawColor(b->renderer, 255 * ((cost - least)/(most)), 255 - 255 * ((cost - least)/(most)), 0x00, 0xFF);
     } else {
-        SDL_SetRenderDrawColor(b->renderer, 0x00, 0x00, 0x00, 0xFF);
+        SDL_SetRenderDrawColor(b->renderer, 0xFF, 0xFF, 0xFF, 0xFF);
     }
     auto rotate = [] (pair<float, float> p, pair<float, float> r, double angle) -> pair<float, float> {
         float x = p.first, y = p.second, rx = r.first, ry = r.second;
@@ -614,6 +627,7 @@ double SDLH::Ray::lconverge(pair<int, int> a, pair<int, int> b) {
             return 1e9;
         }
     }
+    return 1e9;
 }
 
 double SDLH::Ray::hconverge(SDL_Rect* hitbox) {
