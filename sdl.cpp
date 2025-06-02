@@ -417,7 +417,7 @@ SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Display* b) {
     cooldown = OBSTACLE_COOLDOWN;
     for (int i = 0; i < RAY_AMOUNT; i ++) {
         rays.push_back(new Ray(x, y, 
-            dir - (SIGHT_ANGLE / 2) + i * (SIGHT_ANGLE / (RAY_AMOUNT - 1))));
+            dir - (SIGHT_ANGLE / 2) + i * (SIGHT_ANGLE / (RAY_AMOUNT - 1)), b));
     }
 }
 
@@ -431,7 +431,7 @@ void getInputs(AIH::Network* &nn, SDLH::Agent* a, SDLH::Display* b) {
     for (int i = 0; i < RAY_AMOUNT; i ++) {
         (a->rays[i])->update(a->pos.first, a->pos.second, 
             a->dir - (SIGHT_ANGLE / 2) + i * (SIGHT_ANGLE / (RAY_AMOUNT - 1)));
-        double cur = a->rays[i]->agint(agents);
+        double cur = a->rays[i]->agint(agents, a);
         if (cur == 1e9) {
             inp->neurons[i]->value = 1; 
         } else {
@@ -544,48 +544,37 @@ void SDLH::Agent::fire(SDLH::Display* b, double dir) {
 Ray
 */
 
-SDLH::Ray::Ray(double x, double y, double ang) {
+SDLH::Ray::Ray(double x, double y, double ang, SDLH::Display* b) {
     /*
     Initializes ray and converts an angle measure into 
     dx and dy.
     */
-    this->x = x;
-    this->y = y;
-    double radians = ang * (M_PI / 180);
-    this->dx = cos(radians);
-    this->dy = sin(radians);    
-    this->ang = ang * (M_PI / 180);
-    if (this->ang < 0) {
-        this->ang = abs(this->ang);
-    }
-    if (this->ang > 2 * M_PI) {
-        this->ang -= 2 * M_PI * floor(this->ang / (2 * M_PI));
-    }
-    // ensures angle is between 0 and 2PI
+    update(x, y, ang);
+    this->b = b;
 }
 
 bool SDLH::Ray::inbounds(pair<double, double> point) {
     /*
-    Given a point, check if the point is on the ray. 
+    Given a point on a ray's line, check if the point is on the ray. 
     */
-    double slope = tan(ang);
+   double slope = tan(ang);
     double diff = point.first - x;
     if (abs((slope * diff + y) - point.second) < 0.01) {
         // on the line encompassing the ray
-        if (ang >= (M_PI / 2) && ang <= (3 * M_PI / 2)) {
-            // going to the left
-            if (point.first <= x) {
-                return true;
-            } else {
-                return false;
-            }
+    if (ang >= (M_PI / 2) && ang <= (3 * M_PI / 2)) {
+        // going to the left
+        if (point.first <= x) {
+            return true;
         } else {
-            // going to the right
-            if (point.first >= x) {
-                return true;
-            } else {
-                return false;
-            }
+            return false;
+        }
+    } else {
+        // going to the right
+        if (point.first >= x) {
+            return true;
+        } else {
+            return false;
+        }
         }
     } else {
         // not on the line
@@ -608,9 +597,9 @@ double SDLH::Ray::lconverge(pair<int, int> a, pair<int, int> b) {
     */
     // formula for determinant is A1 * B2 - A2 * B1
     double det = -rslope + lslope;
-    if (rslope == lslope) {
+    if (det == 0) {
         // coincident or parallel
-        return 1e9;
+        return 0;
     } else {
         /* formula for intersection is
         for x: (B2 * C1 − B1 * C2)​ / det
@@ -623,7 +612,18 @@ double SDLH::Ray::lconverge(pair<int, int> a, pair<int, int> b) {
         point.second = (-rslope * c2 + lslope * c1) / det;
         if (inbounds(point)) {
             double dist = sqrt(pow(point.first - x, 2) + pow(point.second - y, 2));
+            if (SHOW_RAYS) {
+                SDL_SetRenderDrawColor(this->b->renderer, 0x00, 0xFF, 0x00, 0x55);
+                SDL_RenderDrawLine(this->b->renderer, x, y, point.first, point.second);
+                SDL_SetRenderDrawColor(this->b->renderer, 0xFF, 0x00, 0x00, 0x55);
+                SDL_RenderDrawLine(this->b->renderer, a.first, a.second, b.first, b.second);
+            }
+            return dist;
         } else {
+            if (SHOW_RAYS) {
+                SDL_SetRenderDrawColor(this->b->renderer, 0x00, 0xFF, 0x00, 0x55);
+                SDL_RenderDrawLine(this->b->renderer, x, y, x + 500, y + (rslope * (500)));
+            }
             return 1e9;
         }
     }
@@ -651,18 +651,26 @@ void SDLH::Ray::update(double x, double y, double ang) {
     Update x, y, and angle.
     */
     this->x = x;
-    this->y = y;
-    double radians = ang * (M_PI / 180);
-    this->dx = cos(radians);
-    this->dy = sin(radians);
+    this->y = y; 
+    this->ang = ang * (M_PI / 180);
+    // ensures angle is between 0 and 2PI
+    if (this->ang < 0) {
+        this->ang = abs(this->ang);
+    }
+    if (this->ang > 2 * M_PI) {
+        this->ang -= 2 * M_PI * floor(this->ang / (2 * M_PI));
+    }
+    this->dx = cos(this->ang);
+    this->dy = sin(this->ang);
 }
 
-double SDLH::Ray::agint(vector<Agent*> v) {
+double SDLH::Ray::agint(vector<Agent*> v, Agent* avoid) {
     /*
     Get closest intersection with agents in vector. 
     */
     double ans = 1e9;
     for (Agent* a : v) {
+        if (a == avoid) continue;
         ans = min(ans, hconverge((*a).hitbox));
     }
     return ans;

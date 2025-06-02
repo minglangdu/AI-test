@@ -102,16 +102,17 @@ namespace SDLH {
     };
 
     struct Ray {
-        Ray(double x, double y, double ang); // ray constructor
+        Ray(double x, double y, double ang, Display* b); // ray constructor
         bool inbounds(std::pair<double, double> point); // check if a point on the ray's line is on the ray
         double lconverge(std::pair<int, int> a, std::pair<int, int> b); // check intersection with line
         double hconverge(SDL_Rect* hitbox); // check intersection with hitbox
         void update(double x, double y, double ang); // change 
-        double agint(std::vector<Agent*> v); // get closest intersection with agents
+        double agint(std::vector<Agent*> v, Agent* avoid); // get closest intersection with agents
         double obint(std::vector<Obstacle*> v); // get closest intersection with obstacles
 
         double x, y;
         double dx, dy;
         double ang;
+        Display* b;
     };
 };

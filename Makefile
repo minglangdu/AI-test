@@ -23,4 +23,5 @@ goal:
 	rm ai.o
 	rm main.o
 	rm main
+	rm networks/agent.csv
 	echo "Done."
