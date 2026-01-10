@@ -1,5 +1,6 @@
-.SILENT: goal
-goal:
+.SILENT: all
+.PHONY: all
+all:
 	echo "Compiling sdl.cpp..."
 	-g++ sdl.cpp -std=c++11 -c \
 	-I /opt/homebrew/include
