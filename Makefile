@@ -4,7 +4,7 @@ LIBS=-lSDL2-2.0.0
 LDFLAGS=-L/opt/homebrew/lib
 
 .PHONY: all clean run
-all: main
+all: main run
 main: sdl.o main.o ai.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(LIBS) sdl.o main.o ai.o -o main
 sdl.o: sdl.cpp
