@@ -35,7 +35,7 @@ int main() {
             if (stored != "") {
                 a->nn = new AIH::Network(stored);
             }
-            if (i % 2 != 0) {
+            if (i < (AGENT_AMOUNT * MUTATION_CHANCE)) {
                 // mutate
                 a->nn->mutate(MUTATION_AMOUNT);
             }
@@ -64,6 +64,7 @@ int main() {
         b->clearObstacles();
         b->loop();
         SDL_Delay(750);
+        // SDL_Delay(1000000);
     }
 
     b->destroy();

@@ -18,4 +18,4 @@ run: main
 clean:
 	rm -f *.o
 	rm main
-	rm networks/agent.csv
+# 	rm networks/agent.csv

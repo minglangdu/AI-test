@@ -408,16 +408,18 @@ SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Display* b) {
     hitbox->h = AGENT_SIZE;
     pos = {x, y}; // set position
     speed = 0; // initialize speed
-    dir = dir; // initialize direction
-    side = side; // ai faction
+    this->dir = dir; // initialize direction
+    this->side = side; // ai faction
     nn = new AIH::Network(); // neural network
     starttick = SDL_GetTicks(); // for use to calculate delta
     cost = 0;
     b->rects.push_back(this->hitbox);
     cooldown = OBSTACLE_COOLDOWN;
     for (int i = 0; i < RAY_AMOUNT; i ++) {
-        rays.push_back(new Ray(x, y, 
-            dir - (SIGHT_ANGLE / 2) + i * (SIGHT_ANGLE / (RAY_AMOUNT - 1)), b));
+        double nang = (dir - (SIGHT_ANGLE / 2) + i * (SIGHT_ANGLE / (RAY_AMOUNT + 1)));
+        nang -= (int)(nang / 360) * 360;
+        if (nang < 0) nang += 360;
+        rays.push_back(new Ray(x, y, nang, b));
     }
 }
 
@@ -435,7 +437,7 @@ void getInputs(AIH::Network* &nn, SDLH::Agent* a, SDLH::Display* b) {
         if (cur == 1e9) {
             inp->neurons[i]->value = 1; 
         } else {
-            inp->neurons[i]->value =  cur / (WINDOW_SIZE * sqrt(2)); // longest possible length
+            inp->neurons[i]->value = cur / (WINDOW_SIZE * sqrt(2)); // longest possible length
         }
     }
     inp->neurons[RAY_AMOUNT]->value = (a->speed + MAX_SPEED) / 2 * MAX_SPEED;
@@ -457,6 +459,12 @@ void SDLH::Agent::update(SDLH::Display* b) {
     // applies constraints
     angvel = max(min(angvel, MAX_ANGVEL), MAX_ANGVEL * -1);
     speed = max(min(speed, MAX_SPEED), MAX_SPEED * -1);
+    if (abs(speed) < 0.1) {
+        speed = 0;
+    }
+    if (abs(angvel) < 0.1) { // deadzone-straight line
+        angvel = 0;
+    }
     // update direction
     dir += angvel;
     double dec = dir - floor(dir);
@@ -478,6 +486,11 @@ void SDLH::Agent::update(SDLH::Display* b) {
     // update hitbox positions
     hitbox->x = pos.first;
     hitbox->y = pos.second;
+    // readjusts rays
+    for (int i = 0; i < RAY_AMOUNT; i ++) {
+        rays[i]->update(pos.first, pos.second, 
+            dir - (SIGHT_ANGLE / 2) + i * (SIGHT_ANGLE / (RAY_AMOUNT - 1)));
+    }
     // fires obstacles
     if (a[2] >= 0.5) {
         fire(b, dir);
@@ -553,76 +566,59 @@ SDLH::Ray::Ray(double x, double y, double ang, SDLH::Display* b) {
     this->b = b;
 }
 
-bool SDLH::Ray::inbounds(pair<double, double> point) {
-    /*
-    Given a point on a ray's line, check if the point is on the ray. 
-    */
-   double slope = tan(ang);
-    double diff = point.first - x;
-    if (abs((slope * diff + y) - point.second) < 0.01) {
-        // on the line encompassing the ray
-    if (ang >= (M_PI / 2) && ang <= (3 * M_PI / 2)) {
-        // going to the left
-        if (point.first <= x) {
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        // going to the right
-        if (point.first >= x) {
-            return true;
-        } else {
-            return false;
-        }
-        }
-    } else {
-        // not on the line
-        return false;
-    }
-    // if the flow goes here, good luck ig
-    return false;
-}
-
 double SDLH::Ray::lconverge(pair<int, int> a, pair<int, int> b) {
     /*
     Checks if the ray hits a line and then returns 
     its distance to that line or 1e9 if it missed. 
     */
-    double rslope = tan(ang); // slope of this ray
-    double lslope = (a.second - b.second) / (a.first - b.first); // line slope
-    /* formula for standard form from point-slope:
-    y - mx = y1 - mx1
-    so if B = 1, A = -m and C = y1 - mx1
-    */
-    // formula for determinant is A1 * B2 - A2 * B1
-    double det = -rslope + lslope;
-    if (det == 0) {
+    
+    if (ang == atan2(((double)a.second - b.second), ((double)a.first - (double)b.first))) {
         // coincident or parallel
-        return 0;
+        return 1e9; 
     } else {
-        /* formula for intersection is
-        for x: (B2 * C1 − B1 * C2)​ / det
-        for y: (A1 * C2 - A2 * C1) / det
-        */
-        int c1 = y - rslope * x;
-        int c2 = a.second - lslope * a.first;
         pair<double, double> point;
-        point.first = (c1 - c2) / det;
-        point.second = (-rslope * c2 + lslope * c1) / det;
-        if (inbounds(point)) {
+        bool rdef = (cos(ang) != 0), ldef = (((double)a.first - (double)b.first) != 0);
+        double rslope = tan(ang); // slope of this ray
+        double lslope = ((double)a.second - b.second) / ((double)a.first - (double)b.first); // line slope
+        if (rdef && ldef) {
+            point.first = (double)(y + a.second - lslope * a.first - rslope * x) / (lslope - rslope);
+            point.second = (double)(point.first - x) * rslope + y;
+        } else if (!rdef && ldef) {
+            point.first = x;
+            point.second = (double)(point.first - a.first) * lslope + a.second;
+        } else if (rdef && !ldef) {
+            point.first = a.first; 
+            point.second = (double)(point.first - x) * rslope + y;
+        } // can't have both undefined, covered by coincident or parallel
+        bool flag = true;
+        if ((dx < 0) ^ ((point.first - x) < 0)) { // check if parities of dx and (point.first - x) are different
+            flag = false;
+        }
+        if ((point.first < min(a.first, b.first)) || (point.first > max(a.first, b.first))
+    || (point.second < min(a.second, b.second)) || (point.second > max(a.second, b.second))) {
+            flag = false;
+        } 
+        if (SHOW_RAYS) {
+            SDL_SetRenderDrawColor(this->b->renderer, 0xFF, 0x00, 0x00, 0xFF);
+            SDL_RenderDrawPoint(this->b->renderer, point.first, point.second);
+        }
+        if (flag) {
             double dist = sqrt(pow(point.first - x, 2) + pow(point.second - y, 2));
             if (SHOW_RAYS) {
-                SDL_SetRenderDrawColor(this->b->renderer, 0x00, 0xFF, 0x00, 0x55);
+                SDL_SetRenderDrawColor(this->b->renderer, 0x00, 0xFF, 0x00, 0xFF);
                 SDL_RenderDrawLine(this->b->renderer, x, y, point.first, point.second);
-                SDL_SetRenderDrawColor(this->b->renderer, 0xFF, 0x00, 0x00, 0x55);
+                SDL_SetRenderDrawColor(this->b->renderer, 0xFF, 0x00, 0x00, 0xFF);
                 SDL_RenderDrawLine(this->b->renderer, a.first, a.second, b.first, b.second);
             }
             return dist;
         } else {
             if (SHOW_RAYS) {
-                SDL_SetRenderDrawColor(this->b->renderer, 0x00, 0xFF, 0x00, 0x55);
-                SDL_RenderDrawLine(this->b->renderer, x, y, x + 500, y + (rslope * (500)));
+                SDL_SetRenderDrawColor(this->b->renderer, 0x66, 0x66, 0x66, 0x55);
+                if ((dx < 0) ^ ((point.first - x) < 0)) {
+                    SDL_RenderDrawLine(this->b->renderer, x, y, x + dx * WINDOW_SIZE, y + (dy * (WINDOW_SIZE)));
+                } else {
+                    SDL_RenderDrawLine(this->b->renderer, x, y, point.first, point.second);
+                }
             }
             return 1e9;
         }
