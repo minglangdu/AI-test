@@ -416,7 +416,7 @@ SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Display* b) {
     b->rects.push_back(this->hitbox);
     cooldown = OBSTACLE_COOLDOWN;
     for (int i = 0; i < RAY_AMOUNT; i ++) {
-        double nang = (dir - (SIGHT_ANGLE / 2) + i * (SIGHT_ANGLE / (RAY_AMOUNT + 1)));
+        double nang = (dir - (SIGHT_ANGLE / 2) + (i + 1) * (SIGHT_ANGLE / (RAY_AMOUNT + 1)));
         nang -= (int)(nang / 360) * 360;
         if (nang < 0) nang += 360;
         rays.push_back(new Ray(x, y, nang, b));
@@ -431,8 +431,10 @@ void getInputs(AIH::Network* &nn, SDLH::Agent* a, SDLH::Display* b) {
     // set inputs
     vector<SDLH::Agent*> agents = b->getAgents();
     for (int i = 0; i < RAY_AMOUNT; i ++) {
-        (a->rays[i])->update(a->pos.first, a->pos.second, 
-            a->dir - (SIGHT_ANGLE / 2) + i * (SIGHT_ANGLE / (RAY_AMOUNT - 1)));
+        double nang = ((a->dir) - (SIGHT_ANGLE / 2) + (i + 1) * (SIGHT_ANGLE / (RAY_AMOUNT + 1)));
+        nang -= (int)(nang / 360) * 360;
+        if (nang < 0) nang += 360;
+        (a->rays[i])->update(a->pos.first, a->pos.second, nang);
         double cur = a->rays[i]->agint(agents, a);
         if (cur == 1e9) {
             inp->neurons[i]->value = 1; 
@@ -488,8 +490,10 @@ void SDLH::Agent::update(SDLH::Display* b) {
     hitbox->y = pos.second;
     // readjusts rays
     for (int i = 0; i < RAY_AMOUNT; i ++) {
-        rays[i]->update(pos.first, pos.second, 
-            dir - (SIGHT_ANGLE / 2) + i * (SIGHT_ANGLE / (RAY_AMOUNT - 1)));
+        double nang = (dir - (SIGHT_ANGLE / 2) + (i + 1) * (SIGHT_ANGLE / (RAY_AMOUNT + 1)));
+        nang -= (int)(nang / 360) * 360;
+        if (nang < 0) nang += 360;
+        rays[i]->update(pos.first, pos.second, nang);
     }
     // fires obstacles
     if (a[2] >= 0.5) {
@@ -614,11 +618,12 @@ double SDLH::Ray::lconverge(pair<int, int> a, pair<int, int> b) {
         } else {
             if (SHOW_RAYS) {
                 SDL_SetRenderDrawColor(this->b->renderer, 0x66, 0x66, 0x66, 0x55);
-                if ((dx < 0) ^ ((point.first - x) < 0)) {
-                    SDL_RenderDrawLine(this->b->renderer, x, y, x + dx * WINDOW_SIZE, y + (dy * (WINDOW_SIZE)));
-                } else {
-                    SDL_RenderDrawLine(this->b->renderer, x, y, point.first, point.second);
-                }
+                SDL_RenderDrawLine(this->b->renderer, x, y, x + dx * WINDOW_SIZE, y + (dy * (WINDOW_SIZE)));
+                // if ((dx < 0) ^ ((point.first - x) < 0)) {
+                //     SDL_RenderDrawLine(this->b->renderer, x, y, x + dx * WINDOW_SIZE, y + (dy * (WINDOW_SIZE)));
+                // } else {
+                //     SDL_RenderDrawLine(this->b->renderer, x, y, point.first, point.second);
+                // }
             }
             return 1e9;
         }
@@ -648,10 +653,10 @@ void SDLH::Ray::update(double x, double y, double ang) {
     */
     this->x = x;
     this->y = y; 
-    this->ang = ang * (M_PI / 180);
+    this->ang = (- ang) * (M_PI / 180);
     // ensures angle is between 0 and 2PI
     if (this->ang < 0) {
-        this->ang = abs(this->ang);
+        this->ang += 2 * M_PI; 
     }
     if (this->ang > 2 * M_PI) {
         this->ang -= 2 * M_PI * floor(this->ang / (2 * M_PI));

@@ -7,12 +7,12 @@
 
 // sizes of different layers
 // const std::vector<int> sizes = {12, 7, 7, 3, 0};
-const std::vector<int> sizes = {12, 7, 3, 0};
+const std::vector<int> sizes = {26, 7, 3, 0};
 
 const int WINDOW_SIZE = 500;
 
 const double MAX_SPEED = 0.75;
-const double MAX_ANGVEL = 2;
+const double MAX_ANGVEL = 1;
 const int AGENT_SIZE = 15;
 // const int AGENT_AMOUNT = 10;
 const int AGENT_AMOUNT = 2;
@@ -24,11 +24,10 @@ const int FIRE_COST = 1;
 const int HIT_COST = 1000;
 const int HIT_REWARD = -500; // reward to hitting another agent
 
-const int SIGHT_ANGLE = 60; // angle that the agent can see using rays
-const int RAY_AMOUNT = 10; // amount of rays sent out
+const int SIGHT_ANGLE = 120; // angle that the agent can see using rays
+const int RAY_AMOUNT = 24; // amount of rays sent out
 
 const bool DEBUG = false; // prints out debug statements
-
 const bool DEBUG_WIND = true; // shows neural network in new window
 const int DEBUG_SIZE = 700;
 const int YOFF = 375; // how much to move the representation down
@@ -36,7 +35,7 @@ const int NSIZE = 15; // how large the node representation is
 const int XGAP = 150; // the gap between nodes in the window
 const int YGAP = 75;
 
-const int EPOCH_LENGTH = 350;
+const int EPOCH_LENGTH = 750;
 const int EPOCH_AMOUNT = 15;
 
 const double MUTATION_AMOUNT = 0.75;
