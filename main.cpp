@@ -42,7 +42,6 @@ int main() {
             }
             b->addAgent(a);
         }
-
         while (!b->quit && tick < EPOCH_LENGTH) {
             b->loop();
             tick ++;
@@ -54,14 +53,27 @@ int main() {
                         continue;
                     }
                     double add = 0;
-                    // for (int i = 0; i < a->nn->layers.back()->neurons.size(); i ++) {
-                    //     add += pow((a->nn->layers.back()->neurons[i]->value - o->nn->layers.back()->neurons[i]->value), 2);
-                    // }
-                    add += pow(a->dir - o->dir, 2);
-                    cout << a->dir - o->dir << "\n";
+                    for (int i = 0; i < a->nn->layers.back()->neurons.size(); i ++) {
+                        add += pow((a->nn->layers.back()->neurons[i]->value - o->nn->layers.back()->neurons[i]->value), 2);
+                    }
                     bonus += sqrt(add);
                 }
                 a->cost -= bonus * NOVELTY_REWARD;
+                if (bonus != 0) {
+                    cout << bonus << "\n";
+                }
+            }
+            // proximity rewards
+            for (SDLH::Agent* a : b->getAgents()) {
+                double closest = PROXIMITY_RADIUS;
+                for (SDLH::Agent* o : b->getAgents()) {
+                    if (o == a) {
+                        continue;
+                    }
+                    double dist = sqrt(pow((a->pos.first - o->pos.first), 2) + pow((a->pos.second - o->pos.second), 2));
+                    closest = min(closest, dist);
+                }
+                a->cost -= ((PROXIMITY_RADIUS - closest) / PROXIMITY_RADIUS) * PROXIMITY_REWARD; 
             }
         }
         if (b->quit) { // manually closed

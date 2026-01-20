@@ -456,8 +456,8 @@ void SDLH::Agent::update(SDLH::Display* b) {
     vector<double> a = nn->run();
     // sets angvel and speed based on outputs
     // angvel = a[1] - dir;
-    angvel = a[1];
-    speed = a[0];
+    angvel = a[1] * MAX_ANGVEL;
+    speed = a[0] * MAX_SPEED;
     // cout << a[0] << " " << a[1] << "\n";
     // applies constraints
     angvel = max(min(angvel, MAX_ANGVEL), MAX_ANGVEL * -1);
