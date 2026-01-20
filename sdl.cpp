@@ -442,8 +442,8 @@ void getInputs(AIH::Network* &nn, SDLH::Agent* a, SDLH::Display* b) {
             inp->neurons[i]->value = cur / (WINDOW_SIZE * sqrt(2)); // longest possible length
         }
     }
-    inp->neurons[RAY_AMOUNT]->value = (a->speed + MAX_SPEED) / 2 * MAX_SPEED;
-    inp->neurons[RAY_AMOUNT + 1]->value = (a->angvel + MAX_ANGVEL) / 2 * MAX_ANGVEL;
+    inp->neurons[RAY_AMOUNT]->value = (a->speed + MAX_SPEED) / (2 * MAX_SPEED);
+    inp->neurons[RAY_AMOUNT + 1]->value = (a->angvel + MAX_ANGVEL) / (2 * MAX_ANGVEL);
 }
 
 void SDLH::Agent::update(SDLH::Display* b) {
@@ -455,7 +455,8 @@ void SDLH::Agent::update(SDLH::Display* b) {
     // runs nn
     vector<double> a = nn->run();
     // sets angvel and speed based on outputs
-    angvel = a[1] - dir;
+    // angvel = a[1] - dir;
+    angvel = a[1];
     speed = a[0];
     // cout << a[0] << " " << a[1] << "\n";
     // applies constraints
@@ -469,6 +470,9 @@ void SDLH::Agent::update(SDLH::Display* b) {
     }
     // update direction
     dir += angvel;
+    if (dir < 0) {
+        dir += 360;
+    }
     double dec = dir - floor(dir);
     dir = (int)dir % 360 + dec;
     // find delta and update ticks

@@ -33,6 +33,7 @@ int main() {
         for (int i = 0; i < AGENT_AMOUNT; i ++) {
             SDLH::Agent* a = new SDLH::Agent(dist(mt), dist(mt), dist2(mt), 0, b);
             if (stored != "") {
+                delete a->nn;
                 a->nn = new AIH::Network(stored);
             }
             if (i < (AGENT_AMOUNT * MUTATION_CHANCE)) {
@@ -45,6 +46,23 @@ int main() {
         while (!b->quit && tick < EPOCH_LENGTH) {
             b->loop();
             tick ++;
+            // novelty bonuses
+            for (SDLH::Agent* a : b->getAgents()) {
+                double bonus = 0;
+                for (SDLH::Agent* o : b->getAgents()) {
+                    if (a == o) {
+                        continue;
+                    }
+                    double add = 0;
+                    // for (int i = 0; i < a->nn->layers.back()->neurons.size(); i ++) {
+                    //     add += pow((a->nn->layers.back()->neurons[i]->value - o->nn->layers.back()->neurons[i]->value), 2);
+                    // }
+                    add += pow(a->dir - o->dir, 2);
+                    cout << a->dir - o->dir << "\n";
+                    bonus += sqrt(add);
+                }
+                a->cost -= bonus * NOVELTY_REWARD;
+            }
         }
         if (b->quit) { // manually closed
             break;

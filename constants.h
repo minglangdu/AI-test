@@ -9,37 +9,38 @@
 // const std::vector<int> sizes = {12, 7, 7, 3, 0};
 const std::vector<int> sizes = {26, 7, 3, 0};
 
-const int WINDOW_SIZE = 500;
+const int WINDOW_SIZE = 750;
 
 const double MAX_SPEED = 0.75;
 const double MAX_ANGVEL = 1;
-const int AGENT_SIZE = 15;
-// const int AGENT_AMOUNT = 10;
-const int AGENT_AMOUNT = 2;
+const int AGENT_SIZE = 8;
+const int AGENT_AMOUNT = 30;
+// const int AGENT_AMOUNT = 2;
 
 const int OBSTACLE_SIZE = 10;
 const int OBSTACLE_SPEED = 3;
-const double OBSTACLE_COOLDOWN = 50;
+const double OBSTACLE_COOLDOWN = 250;
 const int FIRE_COST = 1;
-const int HIT_COST = 1000;
-const int HIT_REWARD = -500; // reward to hitting another agent
+const int HIT_COST = 25;
+const int HIT_REWARD = -200; // reward to hitting another agent
+const double NOVELTY_REWARD = 0;
 
 const int SIGHT_ANGLE = 120; // angle that the agent can see using rays
 const int RAY_AMOUNT = 24; // amount of rays sent out
 
 const bool DEBUG = false; // prints out debug statements
-const bool DEBUG_WIND = true; // shows neural network in new window
+const bool DEBUG_WIND = false; // shows neural network in new window
 const int DEBUG_SIZE = 700;
 const int YOFF = 375; // how much to move the representation down
 const int NSIZE = 15; // how large the node representation is
 const int XGAP = 150; // the gap between nodes in the window
 const int YGAP = 75;
 
-const int EPOCH_LENGTH = 750;
-const int EPOCH_AMOUNT = 15;
+const int EPOCH_LENGTH = 500;
+const int EPOCH_AMOUNT = 50;
 
-const double MUTATION_AMOUNT = 0.75;
-const double MUTATION_CHANCE = 0.8;
+const double MUTATION_AMOUNT = 20;
+const double MUTATION_CHANCE = 0.9;
 
-const bool SHOW_COSTS = false; // show costs of agents based on their colors
-const bool SHOW_RAYS = true; // show rays of agents and what they hit
+const bool SHOW_COSTS = true; // show costs of agents based on their colors
+const bool SHOW_RAYS = false; // show rays of agents and what they hit
