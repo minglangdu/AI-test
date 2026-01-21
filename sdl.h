@@ -39,6 +39,7 @@ namespace SDLH {
             Display(int width, int height);
             int addAgent(Agent* a); // add to the private agents vector
             std::vector<Agent*> getAgents(); // get the private agents vector
+            void removeAgent(Agent* a); // remove agent
             void clearAgents(); // empty the agents vector
             int addObstacle(Obstacle* o);
             std::vector<Obstacle*> getObstacles();
@@ -93,6 +94,7 @@ namespace SDLH {
         double angvel; // angular velocity
         Uint32 starttick; // used with SDL_GetTick() to find time elapsed between frames
         int side; // faction
+        int health;
         double cooldown; // firing cooldown
 
         AIH::Network* nn; // neural network

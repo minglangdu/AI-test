@@ -20,6 +20,8 @@ int main() {
     std::uniform_real_distribution<double> dist2(0.0, 359.0);
     std::uniform_int_distribution<int> dist(0, WINDOW_SIZE);
     
+    vector<pair<double, string>> survivors;
+
     for (int i = 0; i < EPOCH_AMOUNT; i ++) {
         ifstream fin;
         fin.open("networks/agent.csv");
@@ -32,9 +34,9 @@ int main() {
         int tick = 0;
         for (int i = 0; i < AGENT_AMOUNT; i ++) {
             SDLH::Agent* a = new SDLH::Agent(dist(mt), dist(mt), dist2(mt), 0, b);
-            if (stored != "") {
+            if (i < SURVIVOR_REPRODUCTION * survivors.size()) {
                 delete a->nn;
-                a->nn = new AIH::Network(stored);
+                a->nn = new AIH::Network(survivors[i % SURVIVOR_REPRODUCTION].second);
             }
             if (i < (AGENT_AMOUNT * MUTATION_CHANCE)) {
                 // mutate
@@ -46,6 +48,7 @@ int main() {
             b->loop();
             tick ++;
             // novelty bonuses
+            double mxb = 0;
             for (SDLH::Agent* a : b->getAgents()) {
                 double bonus = 0;
                 for (SDLH::Agent* o : b->getAgents()) {
@@ -59,10 +62,12 @@ int main() {
                     bonus += sqrt(add);
                 }
                 a->cost -= bonus * NOVELTY_REWARD;
-                if (bonus != 0) {
-                    cout << bonus << "\n";
-                }
+                // if (bonus != 0) {
+                //     cout << bonus << "\n";
+                // }
+                mxb = max(mxb, bonus);
             }
+            cout << mxb << "\n";
             // proximity rewards
             for (SDLH::Agent* a : b->getAgents()) {
                 double closest = PROXIMITY_RADIUS;
@@ -80,21 +85,32 @@ int main() {
             break;
         }
 
-        // extract best agent 
-        SDLH::Agent* min = b->getAgents()[0];
-        for (SDLH::Agent* a : b->getAgents()) {
-            if (min->cost >= a->cost) {
-                min = a;
+        // extract survivors
+        survivors.clear();
+        if (b->getAgents().size() == 0) {
+            AIH::Network* nn = new AIH::Network();
+            survivors = {{0, nn->store()}};
+        } else {
+            for (auto agent: b->getAgents()) {
+                survivors.push_back({agent->cost, agent->nn->store()});
             }
         }
-        cout << "Minimum cost: " << min->cost << "\n";
-        min->nn->store("networks/agent.csv");
-
+        sort(survivors.begin(), survivors.end());
+        // get best
+        if (b->getAgents().size() > 0) {
+            SDLH::Agent* min = b->getAgents()[0];
+            for (SDLH::Agent* a : b->getAgents()) {
+                if (min->cost >= a->cost) {
+                    min = a;
+                }
+            }
+            cout << "Minimum cost: " << min->cost << "\n";
+            min->nn->store("networks/agent.csv");
+        }
         b->clearAgents();
         b->clearObstacles();
         b->loop();
         SDL_Delay(750);
-        // SDL_Delay(1000000);
     }
 
     b->destroy();

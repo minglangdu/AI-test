@@ -126,6 +126,10 @@ vector<SDLH::Agent*> SDLH::Display::getAgents() {
     return agents;
 }
 
+void SDLH::Display::removeAgent(SDLH::Agent* a) {
+    agents.erase(remove(agents.begin(), agents.end(), a), agents.end());
+}
+
 void SDLH::Display::clearAgents() {
     /*
     Clears the agents vector.
@@ -379,6 +383,7 @@ void SDLH::Obstacle::update(SDLH::Display* b) {
         if (collision(ag->hitbox, hitbox)) {
             ag->cost += HIT_COST;
             creator->cost += HIT_REWARD;
+            ag->health --;
             hit = true;
         }
     }
@@ -410,6 +415,7 @@ SDLH::Agent::Agent(int x, int y, double dir, int side, SDLH::Display* b) {
     speed = 0; // initialize speed
     this->dir = dir; // initialize direction
     this->side = side; // ai faction
+    this->health = AGENT_HEALTH;
     nn = new AIH::Network(); // neural network
     starttick = SDL_GetTicks(); // for use to calculate delta
     cost = 0;
@@ -450,13 +456,18 @@ void SDLH::Agent::update(SDLH::Display* b) {
     /*
     Updates neural network and position and direction.
     */
+    // checks health
+    if (health <= 0) {
+        // delete this;
+        b->removeAgent(this);
+    }
     // changes inputs
     getInputs(nn, this, b);
     // runs nn
     vector<double> a = nn->run();
     // sets angvel and speed based on outputs
     // angvel = a[1] - dir;
-    angvel = a[1] * MAX_ANGVEL;
+    angvel = 2 * (a[1] - 0.5) * MAX_ANGVEL;
     speed = a[0] * MAX_SPEED;
     // cout << a[0] << " " << a[1] << "\n";
     // applies constraints

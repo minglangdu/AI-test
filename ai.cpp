@@ -243,9 +243,10 @@ void AIH::Network::mutate(double amount) {
         Layer* l = layers[i];
         for (int j = 0; j < l->neurons.size(); j ++) {
             Neuron* n = l->neurons[j];
-            n->bias += dist(mt);
+            n->bias += dist(mt); n->bias = max(min(n->bias, 5.0), -5.0);
             for (int k = 0; k < n->weights.size(); k ++) {
                 n->weights[k] += dist(mt);
+                n->weights[k] = max(min(n->weights[k], 5.0), -5.0);;
             }
         } 
     }
@@ -260,10 +261,5 @@ double AIH::accs(double wsum) {
     Uses the sigmoid function to put values between 1 and 0.
     */
     wsum = min(max(wsum, -5.0), 5.0);
-    // double cur = pow(M_E, wsum) - pow(M_E, -wsum) / pow(M_E, wsum) + pow(M_E, -wsum);
-    // if (cur == INFINITY || cur == -INFINITY) {
-    //     cout << "inf\n";
-    // }
-    // return pow(M_E, wsum) - pow(M_E, -wsum) / pow(M_E, wsum) + pow(M_E, -wsum);
     return (1.0 / (1.0 + exp(-1 * wsum))); 
 }
